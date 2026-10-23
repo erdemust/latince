@@ -6,7 +6,7 @@ import streamlit as st
 # SAYFA YAPILANDIRMASI
 # ==========================================
 st.set_page_config(
-    page_title="Botanikte Renkler Quiz & Liderlik Tablosu",
+    page_title="Botanikte Latince Renkler Quiz & Liderlik Tablosu",
     page_icon="🌿",
     layout="centered",
 )
@@ -25,23 +25,23 @@ if "start_time" not in st.session_state:
 if "elapsed_time" not in st.session_state:
   st.session_state.elapsed_time = 0.0
 
-# Başlangıç için örnek liderlik tablosu
+# Örnek liderlik tablosu
 if "leaderboard" not in st.session_state:
   st.session_state.leaderboard = [
-      {"İsim": "Linnaeus", "Doğru Sayısı": 5, "Süre (sn)": 14.2},
-      {"İsim": "Darwin", "Doğru Sayısı": 4, "Süre (sn)": 11.0},
-      {"İsim": "Mendel", "Doğru Sayısı": 3, "Süre (sn)": 9.5},
+      {"İsim": "Linnaeus", "Doğru Sayısı": 5, "Süre (sn)": 11.2},
+      {"İsim": "Darwin", "Doğru Sayısı": 4, "Süre (sn)": 9.5},
+      {"İsim": "Mendel", "Doğru Sayısı": 3, "Süre (sn)": 7.1},
   ]
 
 # ==========================================
-# 1. ADIM: KAYIT VE SÜRE BAŞLANGICI
+# 1. ADIM: KAYIT VE KRONOMETRE BAŞLANGICI
 # ==========================================
 if st.session_state.stage == "register":
   st.title("🌿 Latince Botanik Renkleri Quiz'i")
   st.markdown(
-      "Botanik adlandırmalarındaki renk terimlerini ne kadar iyi biliyorsun?"
-      " Sorular **teker teker** sorulacak ve bitirdiğin an **süren"
-      " hesaplanarak** liderlik tablosuna işlenecektir!"
+      "Metindeki Latince renk terimlerini ve örnek bitki özelliklerini ne kadar"
+      " iyi anladığını test et! Sorular **teker teker** sorulacak, süren"
+      " tutulacak ve sonuçlar liderlik tablosuna işlenecektir."
   )
 
   with st.form("reg_form"):
@@ -58,7 +58,7 @@ if st.session_state.stage == "register":
         st.session_state.score = 0
         st.session_state.start_time = (
             time.time()
-        )  # Kronometreyi buradan başlatıyoruz!
+        )  # Kronometreyi buradan başlatıyoruz
         st.session_state.stage = "q1"
         st.rerun()
 
@@ -66,7 +66,7 @@ if st.session_state.stage == "register":
 # 2. ADIM: SORULAR (TEKER TEKER)
 # ==========================================
 
-# Soru 1
+# Soru 1: Albus
 elif st.session_state.stage == "q1":
   st.header("Soru 1 / 5")
   st.info(
@@ -75,99 +75,89 @@ elif st.session_state.stage == "q1":
   )
 
   with st.form("q1_form"):
-    ans = st.radio(
-        "Seçiniz:",
-        ["Siyah (Niger)", "Beyaz (Albus)", "Kırmızı (Ruber)", "Sarı (Luteus)"],
-    )
+    ans = st.radio("Seçiniz:", ["Siyah", "Beyaz", "Kırmızı", "Sarı"])
     btn = st.form_submit_button("Sonraki Soru ➡️")
     if btn:
-      if "Beyaz" in ans:
+      if ans == "Beyaz":
         st.session_state.score += 1
       st.session_state.stage = "q2"
       st.rerun()
 
-# Soru 2
+# Soru 2: Viridis
 elif st.session_state.stage == "q2":
   st.header("Soru 2 / 5")
   st.info(
-      "Latince botanik adlandırmalarında **'Viridis'** terimi ne anlama gelir?"
+      "Botanik adlandırmalarında **'Viridis'** terimi hangi anlama gelir?"
   )
 
   with st.form("q2_form"):
-    ans = st.radio(
-        "Seçiniz:",
-        [
-            "Mavi (Caeruleus)",
-            "Yeşil (Viridis)",
-            "Kahverengi (Fuscus)",
-            "Altın sarısı (Aureus)",
-        ],
-    )
+    ans = st.radio("Seçiniz:", ["Mavi", "Yeşil", "Kahverengi", "Altın rengi"])
     btn = st.form_submit_button("Sonraki Soru ➡️")
     if btn:
-      if "Yeşil" in ans:
+      if ans == "Yeşil":
         st.session_state.score += 1
       st.session_state.stage = "q3"
       st.rerun()
 
-# Soru 3
+# Soru 3: Rubra / Ruber
 elif st.session_state.stage == "q3":
   st.header("Soru 3 / 5")
   st.info(
-      "Bir bitki tanımında **'Ruber'** sıfatı geçiyorsa, bu bitkinin hangi rengi"
-      " barındırdığı anlaşılır?"
+      "Bir bitki tanımında **'Rubra'** veya **'Ruber'** sıfatı geçiyorsa,"
+      " bu bitkinin hangi rengi barındırdığı anlaşılır?"
   )
 
   with st.form("q3_form"):
-    ans = st.radio(
-        "Seçiniz:",
-        ["Mor (Purpureus)", "Kırmızı (Ruber)", "Pembe (Roseus)", "Gri (Canus)"],
-    )
+    ans = st.radio("Seçiniz:", ["Mor", "Kırmızı", "Pembe", "Gri"])
     btn = st.form_submit_button("Sonraki Soru ➡️")
     if btn:
-      if "Kırmızı" in ans:
+      if ans == "Kırmızı":
         st.session_state.score += 1
       st.session_state.stage = "q4"
       st.rerun()
 
-# Soru 4
+# Soru 4: Aureus / Aurea
 elif st.session_state.stage == "q4":
   st.header("Soru 4 / 5")
-  st.info("Botanik latincesinde **'Luteus'** terimi hangi rengin karşılığıdır?")
+  st.info(
+      "Botanik latincesinde **'Aureus'** veya **'Aurea'** terimi hangi"
+      " rengin karşılığıdır?"
+  )
 
   with st.form("q4_form"):
-    ans = st.radio(
-        "Seçiniz:",
-        ["Sarı (Luteus)", "Turuncu (Aurantiacus)", "Mavi", "Beyaz"],
-    )
+    ans = st.radio("Seçiniz:", ["Sarı", "Altın rengi", "Gümüş rengi", "Mavi"])
     btn = st.form_submit_button("Sonraki Soru ➡️")
     if btn:
-      if "Sarı" in ans:
+      if ans == "Altın rengi":
         st.session_state.score += 1
       st.session_state.stage = "q5"
       st.rerun()
 
-# Soru 5
+# Soru 5: Örnek Bitki (Rosa alba)
 elif st.session_state.stage == "q5":
   st.header("Soru 5 / 5")
-  st.info("Latince botanik renk terimlerinden **'Niger'** neyi ifade eder?")
+  st.info(
+      "Metindeki örneklerden hareketle, **'Rosa alba'** bitki adındaki"
+      " *alba* kelimesi bu türe ait hangi özelliği belirtir?"
+  )
 
   with st.form("q5_form"):
     ans = st.radio(
-        "Seçiniz:", ["Siyah (Niger)", "Koyu Yeşil", "Gümüşi", "Parlak Sarı"]
+        "Seçiniz:",
+        ["Beyaz çiçek", "Kırmızı meyve", "Dikenli gövde", "Mor yaprak"],
     )
     btn = st.form_submit_button("Testi Bitir ve Skoru Gör 🎯")
     if btn:
-      if "Siyah" in ans:
+      if ans == "Beyaz çiçek":
         st.session_state.score += 1
 
-      # Süreyi hesapla (Başlangıç anı ile şimdi arasındaki fark)
+      # Kronometreyi durdur ve süreyi hesapla
       end_time = time.time()
       st.session_state.elapsed_time = round(
           end_time - st.session_state.start_time, 2
       )
 
-      # Sonucu liderlik tablosuna ekle
+      # Liderlik tablosuna kaydet
       st.session_state.leaderboard.append({
           "İsim": st.session_state.name,
           "Doğru Sayısı": st.session_state.score,
@@ -193,26 +183,23 @@ elif st.session_state.stage == "result":
     )
 
   if st.session_state.score == 5:
-    st.success(
-        "Mükemmel! Tüm botanik renk terimlerini kusursuz bildin! 🌿🌟"
-    )
+    st.success("Mükemmel! Latince renk terimlerini kusursuz bildin! 🌿🌟")
   else:
     st.info("Tebrikler! Liderlik tablosundaki yerini aldın. 👍")
 
   st.divider()
   st.subheader("🌟 En İyi Botanistler (Liderlik Tablosu)")
   st.markdown(
-      "📌 *Sıralama Mantığı:* Önce **en yüksek doğru sayısı**, puanlar eşitse"
-      " **en kısa süre (saniye)** dikkate alınır."
+      "📌 *Sıralama Kuralı:* Önce **en yüksek doğru sayısı**, puanlar eşitse"
+      " **en kısa süre (saniye)** önceliklidir."
   )
 
-  # DataFrame oluştur ve akıllı sıralama yap: Doğru Sayısı (azalan), Süre (artan)
+  # DataFrame sıralaması: Doğru Sayısı (azalan), Süre (artan)
   df_lb = pd.DataFrame(st.session_state.leaderboard)
   df_lb = df_lb.sort_values(
       by=["Doğru Sayısı", "Süre (sn)"], ascending=[False, True]
   ).reset_index(drop=True)
 
-  # Liderlik tablosunu ekrana yazdır
   st.dataframe(df_lb, use_container_width=True)
 
   st.divider()
