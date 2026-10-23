@@ -196,7 +196,7 @@ def validate_questions(df: pd.DataFrame):
         options = split_options(row["options"])
         answer = row["answer"].strip()
 
-        # Remove duplicate choices without changing their order.
+        # Remove duplicate choices while preserving their order.
         unique_options = list(dict.fromkeys(options))
 
         if len(unique_options) < 2:
@@ -205,7 +205,7 @@ def validate_questions(df: pd.DataFrame):
             )
             continue
 
-        # A correct answer must be one of the available options.
+        # Ensure the correct answer exists among the choices.
         if answer.casefold() not in {
             option.casefold() for option in unique_options
         }:
@@ -214,9 +214,18 @@ def validate_questions(df: pd.DataFrame):
             )
             continue
 
-        # Normalize the options so the quiz can display them safely.
+        # Save the validated choices.
         row = row.copy()
         row["options_list"] = unique_options
         cleaned_rows.append(row)
 
-    if
+    # Ensure at least one valid question remains.
+    if not cleaned_rows:
+        raise ValueError(
+            "No valid questions found. Check the options and answers "
+            "in your CSV file."
+        )
+
+    result = pd.DataFrame(cleaned_rows).reset_index(drop=True)
+
+    return result, warnings
