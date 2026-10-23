@@ -1200,7 +1200,6 @@ elif st.session_state.stage == "quiz":
         unsafe_allow_html=True,
     )
 
-    # Şık seçimi için form
     with st.form(f"quiz_form_{index}"):
         selected_option = st.radio(
             "Seçeneğinizi belirleyin:",
@@ -1332,13 +1331,11 @@ elif st.session_state.stage == "result":
 
     df_lb = pd.DataFrame(st.session_state.leaderboard)
     if not df_lb.empty:
-        # Doğru sayısına göre azalan, süreye göre artan sıralama
         df_lb = df_lb.sort_values(
             by=["Doğru Sayısı", "Süre (sn)"], ascending=[False, True]
         ).reset_index(drop=True)
         df_lb.index = df_lb.index + 1
 
-        # Kullanıcının kendi skorunu vurgulama veya şık gösterim
         st.dataframe(
             df_lb[["İsim", "Doğru Sayısı", "Toplam Soru", "Süre (sn)"]],
             use_container_width=True,
@@ -1346,7 +1343,6 @@ elif st.session_state.stage == "result":
 
     with st.expander("📝 Detaylı Soru İncelemesi"):
         for i, ans in enumerate(st.session_state.answers, 1):
-            icon = "✅" if ans["is_correct"] else "❌"
             st.markdown(
                 f"""
                 <div class="answer-card {'answer-correct' if ans['is_correct'] else 'answer-wrong'}">
