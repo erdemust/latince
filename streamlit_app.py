@@ -1,53 +1,49 @@
 import html
 import random
-import sqlite3
 import time
 import uuid
-from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
 
 # ============================================================
-# 1. UYGULAMA AYARLARI
+# 1. SAYFA AYARLARI
 # ============================================================
 
 st.set_page_config(
-    page_title="Botanica Akademi | Öğrenci Sınavı",
+    page_title="Botanica Akademi | Latince Botanik",
     page_icon="🌿",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
 
-BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "botanica_sinav.db"
-
 
 # ============================================================
-# 2. TASARIM
+# 2. PREMIUM TASARIM SİSTEMİ
 # ============================================================
 
 st.markdown(
     """
     <style>
     :root {
-        --green: #3ddc97;
-        --deep: #123c2d;
+        --botanica-green: #3ddc97;
+        --botanica-deep: #123c2d;
+        --botanica-soft: #e5f7ed;
     }
 
     .stApp {
         background:
             radial-gradient(
                 ellipse at top left,
-                rgba(61,220,151,.10),
-                transparent 45%
+                rgba(61, 220, 151, 0.09),
+                transparent 40%
             );
     }
 
     .block-container {
         max-width: 900px;
-        padding: 2rem 1rem 4rem;
+        padding: 2rem 1.2rem 4rem;
     }
 
     #MainMenu,
@@ -56,75 +52,107 @@ st.markdown(
     }
 
     .hero {
-        padding: 2rem;
+        padding: 2.2rem;
         margin-bottom: 1.5rem;
-        border: 1px solid rgba(61,220,151,.25);
-        border-radius: 24px;
-        background: linear-gradient(135deg,#123c2d,#17533c);
-        color: #fff;
+        border: 1px solid rgba(61, 220, 151, .25);
+        border-radius: 26px;
+        background:
+            linear-gradient(
+                135deg,
+                rgba(18, 60, 45, .98),
+                rgba(23, 83, 60, .94)
+            );
+        color: #f4fff8;
+        box-shadow: 0 18px 45px rgba(0, 0, 0, .10);
+    }
+
+    .eyebrow {
+        color: #7df0b8;
+        font-size: .76rem;
+        font-weight: 850;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        margin-bottom: .7rem;
     }
 
     .hero h1 {
-        color: #fff;
-        font-size: clamp(2rem,6vw,3.2rem);
+        color: #ffffff;
+        font-size: clamp(2rem, 6vw, 3.3rem);
         font-weight: 900;
-        line-height: 1.15;
+        letter-spacing: -.055em;
+        line-height: 1.1;
+        margin: .2rem 0 1rem;
     }
 
     .hero p {
         color: #d9f5e5;
         line-height: 1.8;
+        font-size: 1rem;
     }
 
-    .latin {
-        font-size: clamp(2rem,7vw,3.7rem);
-        font-weight: 900;
-        font-style: italic;
-        overflow-wrap: anywhere;
-        line-height: 1.2;
+    .hero-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        margin-top: 1.3rem;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: .45rem .75rem;
+        border: 1px solid rgba(255, 255, 255, .20);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .08);
+        color: #eafff2;
+        font-size: .8rem;
+        font-weight: 650;
     }
 
     .panel {
-        padding: 1.4rem;
+        padding: 1.5rem;
         margin: 1rem 0;
         border: 1px solid var(--default-border-color);
-        border-radius: 20px;
+        border-radius: 22px;
         background: var(--secondary-background-color);
     }
 
-    .metric {
+    .latin {
+        font-size: clamp(2.3rem, 8vw, 4rem);
+        font-weight: 900;
+        font-style: italic;
+        letter-spacing: -.055em;
+        overflow-wrap: anywhere;
+        line-height: 1.1;
+        margin: .6rem 0 1rem;
+    }
+
+    .metric-card {
         padding: 1rem;
+        min-height: 105px;
         border: 1px solid var(--default-border-color);
-        border-radius: 16px;
+        border-radius: 18px;
         background: var(--secondary-background-color);
     }
 
     .metric-label {
+        font-size: .78rem;
         opacity: .7;
-        font-size: .8rem;
+        margin-bottom: .45rem;
     }
 
     .metric-value {
-        font-size: 1.6rem;
-        font-weight: 850;
+        font-size: clamp(1.35rem, 4vw, 2rem);
+        font-weight: 900;
+        letter-spacing: -.04em;
         overflow-wrap: anywhere;
     }
 
     .stButton > button,
     .stFormSubmitButton > button {
-        min-height: 46px;
-        border-radius: 12px;
+        min-height: 48px;
+        width: 100%;
+        border-radius: 13px;
         font-weight: 750;
-    }
-
-    @media(max-width:600px) {
-        .hero {
-            padding: 1.3rem;
-        }
-
-        .panel {
-            padding: 1rem;
-        }
     }
     </style>
     """,
@@ -133,28 +161,99 @@ st.markdown(
 
 
 # ============================================================
-# 3. SORU HAVUZU
+# 3. SORU HAVUZU (50+ Genişletilmiş Botanik Terimler)
 # ============================================================
-
 RAW_QUESTIONS = [
+    # ============================================================
+    # 1. TEMEL RENKLER
+    # ============================================================
+     (
+        "Glaber",
+        "Tüysüz veya pürüzsüz",
+        ["Tüylü", "Tüysüz veya pürüzsüz", "Dikenli", "Benekli"],
+        "Acer glabrum",
+        "Pürüzsüz akçaağaç",
+        "'Glaber' Latince tüysüz veya pürüzsüz anlamına gelir. "
+        "Botanikte bitki yüzeyinde tüy bulunmamasını ifade edebilir. "
+        "Acer glabrum adındaki 'glabrum', sıfatın nötr biçimidir."
+    ),
+    (
+        "Hirsutus",
+        "Uzun veya sert tüylü",
+        ["Pürüzsüz", "Parlak", "Uzun veya sert tüylü", "Tüysüz"],
+        "Rosa hirsuta",
+        "Tüylü gül",
+        "'Hirsutus' uzun veya sert tüylerle kaplı anlamına gelir. "
+        "Botanikte yaprak ve gövde yüzeyindeki belirgin tüyleri "
+        "tanımlamak için kullanılan bir terimdir."
+    ),
+    (
+        "Glabrescens",
+        "Zamanla tüysüzleşen",
+        ["Zamanla tüysüzleşen", "Sürekli tüylü", "Dikenlenen", "Renk değiştiren"],
+        "Bitkilerde glabrescent yüzey",
+        "Zamanla tüysüzleşen yüzey",
+        "'Glabrescens', bitki yüzeyinin gelişim sırasında "
+        "tüylerini kaybederek tüysüzleşmesini ifade eder. "
+        "Bu özellik yaprak ve gövde gibi organlarda görülebilir."
+    ),
+    (
+        "Tomentosus",
+        "Sık ve keçemsi tüylü",
+        ["Parlak", "Sık ve keçemsi tüylü", "Tüysüz", "Dikenli"],
+        "Verbascum tomentosum",
+        "Keçemsi tüylü sığırkuyruğu",
+        "'Tomentosus' sık, yumuşak ve keçemsi tüylerle kaplı "
+        "anlamına gelir. Bu tüyler bitki yüzeyinin dokusunu "
+        "ve görünümünü değiştirebilir. Verilen tür adı ayrıca "
+        "güncel taksonomik kaynaklardan doğrulanmalıdır."
+    ),
+    (
+        "Spinosus",
+        "Dikenli",
+        ["Düz yüzeyli", "Dikenli", "Tüysüz", "Yumuşak"],
+        "Ruscus aculeatus",
+        "Tavşanmemesi",
+        "'Spinosus' dikenli anlamına gelir. Botanikte diken "
+        "taşıyan bitki organlarını veya dikenli görünümü "
+        "tanımlamak için kullanılabilir. Ruscus aculeatus "
+        "sert ve sivri uçlu yapılarıyla tanınır."
+    ),
+    (
+        "Dentatus",
+        "Dişli kenarlı",
+        ["Düz kenarlı", "Dişli kenarlı", "Yuvarlak", "Tüysüz"],
+        "Urtica dioica",
+        "Büyük ısırgan",
+        "'Dentatus' dişli anlamına gelir. Botanikte yaprak "
+        "kenarlarında diş benzeri çıkıntılar bulunmasını "
+        "ifade eder. Urtica dioica yaprakları belirgin "
+        "dişli kenarlara sahiptir."
+    ),
+    
+    
+    
     (
         "Albus",
         "Beyaz",
         ["Siyah", "Beyaz", "Kırmızı", "Sarı"],
         "Nymphaea alba",
         "Beyaz nilüfer",
-        "'Albus' Latince beyaz anlamına gelir. "
-        "'Alba' dişil biçimidir. Nymphaea alba beyaz "
-        "çiçekleriyle tanınır."
+        "'Albus' Latince beyaz anlamına gelir; 'alba', dişil biçimidir. "
+        "Nymphaea alba'nın 'alba' epiteti aynı renk kökünü taşır. "
+        "Beyaz taç yapraklar, görünür ışığın geniş bir bölümünü "
+        "yansıtarak karakteristik beyaz görünümü oluşturur.",
     ),
     (
         "Niger",
-        "Siyah veya çok koyu",
-        ["Yeşil", "Mavi", "Siyah veya çok koyu", "Pembe"],
+        "Siyah",
+        ["Yeşil", "Mavi", "Siyah", "Pembe"],
         "Sambucus nigra",
         "Kara mürver",
-        "'Niger' siyah veya çok koyu anlamına gelir. "
-        "'Nigra' dişil biçimidir."
+        "'Niger' Latince siyah veya çok koyu renkli anlamına gelir; "
+        "'nigra', dişil biçimidir. Sambucus nigra'nın 'nigra' epiteti "
+        "aynı renk kökünü taşır. Olgun meyveleri antosiyanin "
+        "pigmentleri nedeniyle koyu mor-siyah görünür.",
     ),
     (
         "Ruber",
@@ -162,8 +261,10 @@ RAW_QUESTIONS = [
         ["Kırmızı", "Mor", "Gri", "Beyaz"],
         "Quercus rubra",
         "Kırmızı meşe",
-        "'Ruber' kırmızı anlamına gelir. 'Rubra' dişil "
-        "biçimidir."
+        "'Ruber' Latince kırmızı anlamına gelir. Quercus rubra'nın "
+        "'rubra' epiteti aynı renk kökünün dişil biçimidir. "
+        "Yapraklar özellikle sonbaharda kırmızı ve kızıl tonlar "
+        "alabilir; bu renklenmede antosiyanin pigmentleri rol oynar.",
     ),
     (
         "Roseus",
@@ -171,7 +272,11 @@ RAW_QUESTIONS = [
         ["Turuncu", "Kahverengi", "Sarı", "Gül pembesi"],
         "Catharanthus roseus",
         "Madagaskar cezayir menekşesi",
-        "'Roseus' gül renginde anlamına gelir."
+        "'Roseus' gül renginde veya gül pembesi anlamına gelir. "
+        "Catharanthus roseus'un 'roseus' epiteti terimle birebir "
+        "aynı biçimdedir. Türün yaygın pembe çiçekli formlarında "
+        "taç yapraklar gül pembesi görünür; beyaz çiçekli "
+        "kültivarları da bulunur.",
     ),
     (
         "Purpureus",
@@ -179,7 +284,22 @@ RAW_QUESTIONS = [
         ["Mavi", "Mor veya erguvan", "Yeşil", "Gümüş"],
         "Echinacea purpurea",
         "Mor ekinezya",
-        "'Purpureus' mor veya erguvan tonlarını ifade eder."
+        "'Purpureus' mor veya erguvan tonlarını ifade eder. "
+        "Echinacea purpurea'nın 'purpurea' epiteti aynı renk "
+        "kökünün dişil biçimidir. Dilsi çiçekler genellikle "
+        "pembe-mor ve erguvan tonlarındadır.",
+    ),
+    (
+        "Violaceus",
+        "Menekşe moru",
+        ["Kahverengi", "Sarı", "Menekşe moru", "Beyaz"],
+        "Viola violacea",
+        "Menekşe moru çiçekli menekşe",
+        "'Violaceus' menekşe moru anlamına gelir. Viola violacea "
+        "adındaki 'violacea' epiteti aynı renk kökünün dişil "
+        "biçimidir. Bu bilimsel adın güncel taksonomik statüsü "
+        "ve çiçek rengi güvenilir bir taksonomik kaynakla "
+        "doğrulanmalıdır.",
     ),
     (
         "Caeruleus",
@@ -187,9 +307,10 @@ RAW_QUESTIONS = [
         ["Gri", "Gök mavisi", "Siyah", "Kırmızı"],
         "Nymphaea caerulea",
         "Mavi nilüfer",
-        "'Caeruleus' gök mavisi anlamına gelir. "
-        "'Caerulea' dişil biçimidir. Nymphaea caerulea "
-        "mavi tonlardaki çiçekleriyle tanınır."
+        "'Caeruleus' Latince gök mavisi anlamına gelir. "
+        "Nymphaea caerulea'nın 'caerulea' epiteti aynı renk "
+        "kökünün dişil biçimidir. Çiçekleri mavi ve gök mavisi "
+        "tonlarında olabilir.",
     ),
     (
         "Flavus",
@@ -197,23 +318,31 @@ RAW_QUESTIONS = [
         ["Yeşil", "Mor", "Pembe", "Sarı"],
         "Glaucium flavum",
         "Sarı boynuzlu haşhaş",
-        "'Flavus' sarı anlamına gelir."
+        "'Flavus' Latince sarı anlamına gelir. Glaucium flavum'un "
+        "'flavum' epiteti aynı renk kökünün nötr biçimidir. "
+        "Bitkinin çiçekleri parlak sarıdır.",
     ),
     (
         "Luteus",
-        "Sarı veya sarımsı",
-        ["Sarı veya sarımsı", "Mavi", "Siyah", "Gri"],
+        "Sarı",
+        ["Sarı", "Mavi", "Siyah", "Gri"],
         "Reseda lutea",
-        "Reseda",
-        "'Luteus' sarı veya sarımsı anlamına gelir."
+        "Sarı muhabbet çiçeği",
+        "'Luteus' Latince sarı veya sarımsı anlamına gelir. "
+        "Reseda lutea'nın 'lutea' epiteti aynı renk kökünün "
+        "dişil biçimidir. Bitkinin küçük sarı çiçekleri "
+        "dallanmış çiçek durumlarında toplanır.",
     ),
     (
         "Aureus",
         "Altın rengi",
         ["Gümüş", "Kahverengi", "Altın rengi", "Mor"],
-        "Botanik renk sıfatı",
-        "Altın rengi",
-        "'Aureus' altın renginde anlamına gelir."
+        "Carex aurea",
+        "Altın saz",
+        "'Aureus' altın renginde veya altın sarısı anlamına gelir. "
+        "Carex aurea'nın 'aurea' epiteti aynı renk kökünün "
+        "dişil biçimidir. Olgunlaşan başakçıklar ve meyve taşıyan "
+        "yapılar altın sarısı ile sarımsı kahverengi tonlar alabilir.",
     ),
     (
         "Viridis",
@@ -221,8 +350,15 @@ RAW_QUESTIONS = [
         ["Kırmızı", "Yeşil", "Pembe", "Turuncu"],
         "Helleborus viridis",
         "Yeşil çöpleme",
-        "'Viridis' yeşil anlamına gelir."
+        "'Viridis' Latince yeşil anlamına gelir. Helleborus viridis'in "
+        "'viridis' epiteti terimle birebir aynıdır. Yeşil çanak "
+        "yapraklarında bulunan klorofil, yeşil görünümün oluşmasına "
+        "katkıda bulunur.",
     ),
+
+    # ============================================================
+    # 2. ARA VE ÖZEL RENK TONLARI
+    # ============================================================
     (
         "Glaucus",
         "Mavimsi yeşil veya grimsi mavi",
@@ -230,12 +366,15 @@ RAW_QUESTIONS = [
             "Parlak sarı",
             "Koyu kırmızı",
             "Saf beyaz",
-            "Mavimsi yeşil veya grimsi mavi"
+            "Mavimsi yeşil veya grimsi mavi",
         ],
         "Rosa glauca",
         "Mavimsi yapraklı gül",
-        "'Glaucus' mavimsi yeşil veya grimsi mavi "
-        "tonları ifade eder."
+        "'Glaucus' mavimsi yeşil veya grimsi mavi, çoğunlukla puslu "
+        "görünümlü tonları ifade eder. Rosa glauca'nın 'glauca' "
+        "epiteti aynı renk kökünün dişil biçimidir. Yapraklardaki "
+        "mavimsi-yeşil görünüm, yüzeyin optik özellikleri ve "
+        "mumsu tabakayla ilişkilidir.",
     ),
     (
         "Cinereus",
@@ -243,15 +382,51 @@ RAW_QUESTIONS = [
         ["Kül grisi", "Altın sarısı", "Pembe", "Mor"],
         "Eucalyptus cinerea",
         "Gümüş dolar okaliptüsü",
-        "'Cinereus' kül rengi anlamına gelir."
+        "'Cinereus' kül rengi veya kül grisi anlamına gelir. "
+        "Eucalyptus cinerea adındaki 'cinerea' epiteti aynı "
+        "renk kökünün dişil biçimidir. Yapraklardaki kül grisi "
+        "görünüm, yüzeyin mumsu dokusu ve ışığı dağıtmasıyla ilişkilidir.",
     ),
     (
         "Brunneus",
         "Kahverengi",
         ["Beyaz", "Mavi", "Kahverengi", "Pembe"],
-        "Botanik renk sıfatı",
-        "Kahverengi",
-        "'Brunneus' kahverengi anlamına gelir."
+        "Carex brunnea",
+        "Kahverengi saz",
+        "'Brunneus' kahverengi anlamına gelir. Carex brunnea "
+        "adındaki 'brunnea' epiteti aynı renk kökünün dişil "
+        "biçimidir. Türün taksonomik statüsü ve kahverengi "
+        "özelliğinin hangi organlarda görüldüğü güncel "
+        "floristik kaynaklardan doğrulanmalıdır.",
+    ),
+    (
+        "Fuscus",
+        "Koyu kahverengi veya esmer",
+        [
+            "Açık mavi",
+            "Koyu kahverengi veya esmer",
+            "Kar beyazı",
+            "Parlak pembe",
+        ],
+        "Juncus fuscus",
+        "Koyu renkli hasırotu",
+        "'Fuscus' koyu, esmer veya koyu kahverengiye çalan "
+        "anlamına gelir. Juncus fuscus adındaki 'fuscus' "
+        "epiteti terimle birebir aynıdır. Bu adın güncel "
+        "taksonomik geçerliliği ve renk özelliği güvenilir "
+        "botanik kaynaklardan doğrulanmalıdır.",
+    ),
+    (
+        "Fulvus",
+        "Sarımsı kahverengi",
+        ["Mavi", "Siyah", "Mor", "Sarımsı kahverengi"],
+        "Carex fulva",
+        "Sarımsı kahverengi saz",
+        "'Fulvus' sarımsı kahverengi veya boz tonları ifade eder. "
+        "Carex fulva'nın 'fulva' epiteti aynı renk kökünün "
+        "dişil biçimidir. Taksonun güncel geçerliliği ve "
+        "rengin hangi organlarda görüldüğü floristik "
+        "kaynaklardan doğrulanmalıdır.",
     ),
     (
         "Rufus",
@@ -260,11 +435,14 @@ RAW_QUESTIONS = [
             "Kızıl veya kızıl kahverengi",
             "Yeşil",
             "Beyaz",
-            "Gök mavisi"
+            "Gök mavisi",
         ],
-        "Botanik renk sıfatı",
-        "Kızıl ton",
-        "'Rufus' kızıl veya kızıl kahverengi anlamına gelir."
+        "Rumex rufus",
+        "Kızıl labada",
+        "'Rufus' kızıl veya kızıl kahverengi anlamına gelir. "
+        "Rumex rufus adındaki 'rufus' epiteti terimle birebir "
+        "aynıdır. Bu adın güncel taksonomik statüsü ve kızıl "
+        "rengin hangi bitki organında görüldüğü doğrulanmalıdır.",
     ),
     (
         "Pallidus",
@@ -273,19 +451,92 @@ RAW_QUESTIONS = [
             "Çok parlak",
             "Koyu siyah",
             "Soluk veya açık renkli",
-            "Altın rengi"
+            "Altın rengi",
         ],
-        "Botanik renk sıfatı",
-        "Soluk renk",
-        "'Pallidus' soluk veya açık renkli anlamına gelir."
+        "Rosa pallida",
+        "Soluk renkli gül",
+        "'Pallidus' soluk, solgun veya açık renkli anlamına gelir. "
+        "Rosa pallida adındaki 'pallida' aynı renk kökünün "
+        "dişil biçimidir. Bilimsel adın geçerli taksonomik "
+        "statüsü ve renk özelliği doğrulanmalıdır.",
     ),
     (
         "Argenteus",
         "Gümüş rengi",
         ["Turuncu", "Kahverengi", "Kırmızı", "Gümüş rengi"],
-        "Botanik renk sıfatı",
-        "Gümüş rengi",
-        "'Argenteus' gümüş renginde anlamına gelir."
+        "Salix argentea",
+        "Gümüşi söğüt",
+        "'Argenteus' gümüş renginde veya gümüşi anlamına gelir. "
+        "Salix argentea adındaki 'argentea' aynı renk kökünün "
+        "dişil biçimidir. Bu adın güncel taksonomik statüsü "
+        "ve yapraklardaki gümüşi görünüm güvenilir kaynaklardan "
+        "doğrulanmalıdır.",
+    ),
+    (
+        "Lilacinus",
+        "Leylak rengi",
+        ["Yeşil", "Leylak rengi", "Siyah", "Sarı"],
+        "Syringa lilacina",
+        "Leylak renkli leylak",
+        "'Lilacinus' leylak rengi veya açık mor anlamına gelir. "
+        "Syringa lilacina adındaki 'lilacina' aynı renk kökünün "
+        "dişil biçimidir. Bu bilimsel adın güncel taksonomik "
+        "geçerliliği doğrulanmalıdır.",
+    ),
+
+    # ============================================================
+    # 3. KOYU RENKLER VE METALİK TONLAR
+    # ============================================================
+    (
+        "Atropurpureus",
+        "Çok koyu mor veya siyaha çalan erguvan",
+        [
+            "Açık sarı",
+            "Çok koyu mor veya siyaha çalan erguvan",
+            "Beyaz",
+            "Gümüş",
+        ],
+        "Acer atropurpureum",
+        "Koyu mor yapraklı akçaağaç",
+        "'Atropurpureus' çok koyu mor veya siyaha çalan erguvan "
+        "tonlarını ifade eder. Acer atropurpureum adındaki "
+        "'atropurpureum' aynı renk kökünün nötr biçimidir. "
+        "Bu bilimsel adın taksonomik statüsü ve koyu mor "
+        "renk özelliği doğrulanmalıdır.",
+    ),
+    (
+        "Cupreus",
+        "Bakır rengi",
+        ["Bakır rengi", "Mavi", "Beyaz", "Pembe"],
+        "Carex cuprea",
+        "Bakır renkli saz",
+        "'Cupreus' bakır renginde veya bakırımsı anlamına gelir. "
+        "Carex cuprea adındaki 'cuprea' aynı renk kökünün "
+        "dişil biçimidir. Bilimsel adın taksonomik statüsü ve "
+        "bakırımsı renk özelliği güncel floristik kaynaklardan "
+        "doğrulanmalıdır.",
+    ),
+    (
+        "Lacteus",
+        "Süt beyazı",
+        ["Koyu kahverengi", "Mor", "Süt beyazı", "Turuncu"],
+        "Euphorbia lactea",
+        "Sütleğen",
+        "'Lacteus' süt renginde veya süt beyazı anlamına gelir. "
+        "Euphorbia lactea adındaki 'lactea' aynı renk kökünün "
+        "dişil biçimidir. Bitkinin yaralanan dokularından çıkan "
+        "lateks süt beyazıdır.",
+    ),
+    (
+        "Niveus",
+        "Kar beyazı",
+        ["Kızıl", "Yeşil", "Mavi", "Kar beyazı"],
+        "Rubus niveus",
+        "Kar ahududusu",
+        "'Niveus' kar gibi beyaz anlamına gelir. Rubus niveus "
+        "adındaki 'niveus' epiteti terimle birebir aynıdır. "
+        "Bu eşleşme epitet uyumunu sağlar; ancak bitkinin "
+        "bütün organlarının kar beyazı olduğu anlamına gelmez.",
     ),
     (
         "Bicolor",
@@ -293,7 +544,10 @@ RAW_QUESTIONS = [
         ["İki renkli", "Tek renkli", "Renksiz", "Kül grisi"],
         "Viola bicolor",
         "İki renkli menekşe",
-        "'Bicolor' iki renkli anlamına gelir."
+        "'Bicolor' iki renkli anlamına gelir. Viola bicolor "
+        "adındaki 'bicolor' epiteti terimle birebir aynıdır. "
+        "Bilimsel adın güncel taksonomik statüsü ve iki renkli "
+        "görünümün hangi organlarda bulunduğu doğrulanmalıdır.",
     ),
     (
         "Tricolor",
@@ -301,7 +555,10 @@ RAW_QUESTIONS = [
         ["Siyah", "Üç renkli", "Altın sarısı", "Gri"],
         "Viola tricolor",
         "Hercai menekşe",
-        "'Tricolor' üç renkli anlamına gelir."
+        "'Tricolor' üç renkli anlamına gelir. Viola tricolor "
+        "adındaki 'tricolor' epiteti terimle birebir aynıdır. "
+        "Çiçeklerde mor, sarı ve beyaz tonlar aynı anda "
+        "görülebilir.",
     ),
     (
         "Versicolor",
@@ -310,24 +567,24 @@ RAW_QUESTIONS = [
             "Beyaz",
             "Kırmızı",
             "Çok renkli veya renkleri değişken",
-            "Koyu yeşil"
+            "Koyu yeşil",
         ],
         "Iris versicolor",
         "Çok renkli süsen",
-        "'Versicolor' farklı renkler gösteren anlamına gelir."
+        "'Versicolor' farklı renkler gösteren veya renkleri "
+        "değişken olan anlamına gelir. Iris versicolor adındaki "
+        "'versicolor' epiteti terimle birebir aynıdır. Çiçeklerde "
+        "mavi-mor zemin üzerinde sarı ve beyaz işaretler bulunabilir.",
     ),
     (
         "Coccineus",
         "Parlak kızıl veya al kırmızısı",
-        [
-            "Gri",
-            "Parlak kızıl veya al kırmızısı",
-            "Mavimsi yeşil",
-            "Kahverengi"
-        ],
+        ["Gri", "Parlak kızıl veya al kırmızısı", "Mavimsi yeşil", "Kahverengi"],
         "Salvia coccinea",
         "Kızıl adaçayı",
-        "'Coccineus' parlak kızıl anlamına gelir."
+        "'Coccineus' parlak kızıl veya al kırmızısı anlamına gelir. "
+        "Salvia coccinea adındaki 'coccinea' aynı renk kökünün "
+        "dişil biçimidir. Çiçekleri çoğunlukla parlak kırmızıdır.",
     ),
     (
         "Sanguineus",
@@ -335,145 +592,113 @@ RAW_QUESTIONS = [
         ["Kan kırmızısı", "Soluk sarı", "Gümüş", "Yeşil"],
         "Cornus sanguinea",
         "Kan kızılcığı",
-        "'Sanguineus' kan renginde anlamına gelir."
+        "'Sanguineus' kan renginde veya kan kırmızısı anlamına gelir. "
+        "Cornus sanguinea adındaki 'sanguinea' aynı renk kökünün "
+        "dişil biçimidir. Genç sürgünler ve dallar kırmızımsı "
+        "tonlar gösterebilir.",
+    ),
+
+    # ============================================================
+    # 4. AÇIK RENKLER VE RENK DEĞİŞİMLERİ
+    # ============================================================
+    (
+        "Pallens",
+        "Soluk veya solgun",
+        ["Çok koyu", "Altın rengi", "Soluk veya solgun", "Bakır rengi"],
+        "Carex pallens",
+        "Soluk saz",
+        "'Pallens' soluk veya solgun anlamına gelir. Carex pallens "
+        "adındaki 'pallens' epiteti terimle birebir aynıdır. "
+        "Taksonun geçerliliği ve soluk rengin hangi organlarda "
+        "görüldüğü floristik kaynaklardan doğrulanmalıdır.",
     ),
     (
-        "Spinosus",
-        "Dikenli",
-        ["Düz yüzeyli", "Dikenli", "Tüysüz", "Yumuşak"],
-        "Ruscus aculeatus",
-        "Tavşanmemesi",
-        "'Spinosus' dikenli anlamına gelir."
+        "Rubescens",
+        "Kırmızılaşan veya kızaran",
+        ["Yeşile dönen", "Kırmızılaşan veya kızaran", "Beyazlaşan", "Maviye dönen"],
+        "Acer rubescens",
+        "Kızaran akçaağaç",
+        "'Rubescens' kızaran veya kırmızılaşan anlamına gelir. "
+        "Acer rubescens adındaki 'rubescens' epiteti terimle "
+        "birebir aynıdır. Adın güncel taksonomik statüsü ve "
+        "renk değişiminin hangi organlarda görüldüğü doğrulanmalıdır.",
     ),
     (
-        "Dentatus",
-        "Dişli kenarlı",
-        ["Düz kenarlı", "Dişli kenarlı", "Yuvarlak", "Tüysüz"],
-        "Urtica dioica",
-        "Büyük ısırgan",
-        "'Dentatus' dişli anlamına gelir."
+        "Albicans",
+        "Beyazımsı veya beyazlaşan",
+        ["Siyahımsı", "Sarımsı", "Beyazımsı veya beyazlaşan", "Kızılımsı"],
+        "Eucalyptus albicans",
+        "Beyazımsı okaliptüs",
+        "'Albicans' beyazımsı veya beyazlaşan anlamına gelir. "
+        "Eucalyptus albicans adındaki 'albicans' epiteti terimle "
+        "birebir aynıdır. Bilimsel adın güncel geçerliliği ve "
+        "beyazımsı rengin görüldüğü organlar doğrulanmalıdır.",
     ),
     (
-        "Glaber",
-        "Tüysüz veya pürüzsüz",
-        ["Tüylü", "Tüysüz veya pürüzsüz", "Dikenli", "Benekli"],
-        "Acer glabrum",
-        "Akçaağaç",
-        "'Glaber' tüysüz veya pürüzsüz anlamına gelir."
+        "Flavescens",
+        "Sarılaşan veya sarımsı",
+        ["Mavileşen", "Kararan", "Morlaşan", "Sarılaşan veya sarımsı"],
+        "Carex flavescens",
+        "Sarılaşan saz",
+        "'Flavescens' sarılaşan veya sarımsı hale gelen anlamına gelir. "
+        "Carex flavescens adındaki 'flavescens' epiteti terimle "
+        "birebir aynıdır. Taksonun geçerliliği ve sarılaşmanın "
+        "gözlendiği organlar doğrulanmalıdır.",
     ),
     (
-        "Hirsutus",
-        "Uzun veya sert tüylü",
-        ["Pürüzsüz", "Parlak", "Uzun veya sert tüylü", "Tüysüz"],
-        "Botanik betimleme terimi",
-        "Tüylü yüzey",
-        "'Hirsutus' belirgin veya sert tüylerle kaplı anlamına gelir."
-    ),
-    (
-        "Tomentosus",
-        "Sık ve keçemsi tüylü",
-        ["Parlak", "Sık ve keçemsi tüylü", "Tüysüz", "Dikenli"],
-        "Botanik betimleme terimi",
-        "Keçemsi tüylü yüzey",
-        "'Tomentosus' sık ve keçemsi tüylerle kaplı anlamına gelir."
-    ),
-    (
-        "Maculatus",
-        "Benekli veya lekeli",
-        ["Çizgili", "Düz renkli", "Benekli veya lekeli", "Şeffaf"],
-        "Botanik betimleme terimi",
-        "Benekli yüzey",
-        "'Maculatus' benekli veya lekeli anlamına gelir."
-    ),
-    (
-        "Striatus",
-        "Çizgili veya şeritli",
-        ["Çizgili veya şeritli", "Beyaz", "Kızıl", "Altın rengi"],
-        "Botanik betimleme terimi",
-        "Çizgili yüzey",
-        "'Striatus' çizgili veya şeritli anlamına gelir."
-    ),
-    (
-        "Nitidus",
-        "Parlak veya ışıldayan",
-        ["Mat", "Parlak veya ışıldayan", "Soluk", "Kül grisi"],
-        "Botanik betimleme terimi",
-        "Parlak yüzey",
-        "'Nitidus' parlak veya ışıldayan anlamına gelir."
+        "Viridescens",
+        "Yeşilimsi veya yeşile dönen",
+        ["Yeşilimsi veya yeşile dönen", "Kırmızılaşan", "Beyazlaşan", "Kararan"],
+        "Carex viridescens",
+        "Yeşilimsi saz",
+        "'Viridescens' yeşilimsi veya yeşile dönen anlamına gelir. "
+        "Carex viridescens adındaki 'viridescens' epiteti terimle "
+        "birebir aynıdır. Taksonun geçerliliği ve yeşilimsi rengin "
+        "görüldüğü organlar doğrulanmalıdır.",
     ),
     (
         "Obscurus",
         "Koyu, karanlık veya mat",
         ["Açık", "Parlak", "Koyu, karanlık veya mat", "Süt beyazı"],
-        "Botanik betimleme terimi",
-        "Koyu yüzey",
-        "'Obscurus' koyu veya karanlık anlamına gelir."
+        "Carex obscura",
+        "Koyu renkli saz",
+        "'Obscurus' koyu, karanlık veya belirsiz anlamlarına gelir. "
+        "Carex obscura adındaki 'obscura' aynı sözcük kökünün "
+        "dişil biçimidir. Taksonun geçerliliği ve koyu rengin "
+        "görüldüğü organlar doğrulanmalıdır.",
     ),
     (
-        "Subalbus",
-        "Beyazımsı",
-        ["Kırmızı", "Beyazımsı", "Siyah", "Mavi"],
-        "Botanik betimleme terimi",
-        "Beyazımsı renk",
-        "'Subalbus' beyazımsı anlamına gelir."
+        "Nitidus",
+        "Parlak veya ışıldayan",
+        ["Mat", "Parlak veya ışıldayan", "Soluk", "Kül grisi"],
+        "Carex nitida",
+        "Parlak saz",
+        "'Nitidus' parlak veya ışıldayan anlamına gelir. Carex "
+        "nitida adındaki 'nitida' aynı kökün dişil biçimidir. "
+        "Taksonun güncel geçerliliği ve parlaklık özelliğinin "
+        "hangi organlarda bulunduğu doğrulanmalıdır.",
     ),
     (
-        "Subflavus",
-        "Sarımsı",
-        ["Gümüş", "Mor", "Sarımsı", "Koyu siyah"],
-        "Botanik betimleme terimi",
-        "Sarımsı renk",
-        "'Subflavus' sarımsı anlamına gelir."
+        "Maculatus",
+        "Benekli veya lekeli",
+        ["Çizgili", "Düz renkli", "Benekli veya lekeli", "Şeffaf"],
+        "Pulmonaria maculata",
+        "Benekli akciğer otu",
+        "'Maculatus' benekli veya lekeli anlamına gelir. "
+        "Pulmonaria maculata adındaki 'maculata' aynı kökün "
+        "dişil biçimidir. Taksonun geçerliliği ve benekli "
+        "yaprak özelliği güvenilir botanik kaynaklardan doğrulanmalıdır.",
     ),
     (
-        "Rubescens",
-        "Kırmızılaşan veya kızaran",
-        [
-            "Yeşile dönen",
-            "Kırmızılaşan veya kızaran",
-            "Beyazlaşan",
-            "Maviye dönen"
-        ],
-        "Botanik betimleme terimi",
-        "Kızaran yüzey",
-        "'Rubescens' kızaran veya kırmızılaşan anlamına gelir."
-    ),
-    (
-        "Flavescens",
-        "Sarılaşan",
-        ["Mavileşen", "Kararan", "Morlaşan", "Sarılaşan"],
-        "Botanik betimleme terimi",
-        "Sarılaşan yüzey",
-        "'Flavescens' sarılaşan anlamına gelir."
-    ),
-    (
-        "Viridescens",
-        "Yeşilimsi veya yeşile dönen",
-        [
-            "Yeşilimsi veya yeşile dönen",
-            "Kırmızılaşan",
-            "Beyazlaşan",
-            "Kararan"
-        ],
-        "Botanik betimleme terimi",
-        "Yeşilimsi yüzey",
-        "'Viridescens' yeşilimsi veya yeşile dönen anlamına gelir."
-    ),
-    (
-        "Lacteus",
-        "Süt beyazı",
-        ["Koyu kahverengi", "Mor", "Süt beyazı", "Turuncu"],
-        "Euphorbia lactea",
-        "Sütleğen",
-        "'Lacteus' süt renginde anlamına gelir."
-    ),
-    (
-        "Niveus",
-        "Kar beyazı",
-        ["Kızıl", "Yeşil", "Mavi", "Kar beyazı"],
-        "Botanik betimleme terimi",
-        "Kar beyazı renk",
-        "'Niveus' kar gibi beyaz anlamına gelir."
+        "Striatus",
+        "Çizgili veya şeritli",
+        ["Çizgili veya şeritli", "Beyaz", "Kızıl", "Altın rengi"],
+        "Iris striata",
+        "Çizgili süsen",
+        "'Striatus' çizgili veya şeritli anlamına gelir. Iris "
+        "striata adındaki 'striata' aynı kökün dişil biçimidir. "
+        "Taksonun güncel taksonomik statüsü ve çizgilerin "
+        "görüldüğü organlar doğrulanmalıdır.",
     ),
     (
         "Azureus",
@@ -481,7 +706,9 @@ RAW_QUESTIONS = [
         ["Koyu kahverengi", "Azur veya gök mavisi", "Siyah", "Pembe"],
         "Salvia azurea",
         "Gök adaçayı",
-        "'Azureus' gök mavisi anlamına gelir."
+        "'Azureus' azur veya gök mavisi anlamına gelir. Salvia "
+        "azurea adındaki 'azurea' aynı renk kökünün dişil "
+        "biçimidir. Çiçekleri gök mavisi tonlarında olabilir.",
     ),
     (
         "Canus",
@@ -489,77 +716,153 @@ RAW_QUESTIONS = [
         ["Turuncu", "Mor", "Beyazımsı gri veya kırçıllı", "Parlak kırmızı"],
         "Artemisia cana",
         "Gri yapraklı pelin",
-        "'Canus' beyazımsı gri veya kırçıllı anlamına gelir."
+        "'Canus' beyazımsı gri veya kırçıllı anlamına gelir. "
+        "Artemisia cana adındaki 'cana' aynı renk kökünün "
+        "dişil biçimidir. Yaprak ve sürgünlerdeki beyazımsı "
+        "tüyler gri görünümü güçlendirebilir.",
     ),
     (
-        "Micans",
-        "Parıldayan veya ışıltılı",
-        ["Kül grisi", "Parıldayan veya ışıltılı", "Soluk", "Siyah"],
-        "Botanik betimleme terimi",
-        "Parlak yüzey",
-        "'Micans' parıldayan veya ışıldayan anlamına gelir."
+        "Lividus",
+        "Kurşuni, mavimsi gri veya soluk mor",
+        ["Altın sarısı", "Kurşuni, mavimsi gri veya soluk mor", "Pembe", "Yeşil"],
+        "Helleborus lividus",
+        "Mavimsi çöpleme",
+        "'Lividus' kurşuni, mavimsi gri veya soluk mor tonlarını "
+        "ifade eder. Helleborus lividus adındaki 'lividus' "
+        "epiteti terimle birebir aynıdır. Yapraklar mavimsi-yeşil "
+        "ve griye çalan tonlar gösterebilir.",
+    ),
+    (
+        "Coloratus",
+        "Renkli veya belirgin renk taşıyan",
+        ["Renksiz", "Renkli veya belirgin renk taşıyan", "Yalnızca beyaz", "Çizgili"],
+        "Rhododendron coloratum",
+        "Renkli orman gülü",
+        "'Coloratus' renkli veya belirgin biçimde renklendirilmiş "
+        "anlamına gelir. Rhododendron coloratum adındaki "
+        "'coloratum' aynı kökün nötr biçimidir. Bilimsel adın "
+        "taksonomik geçerliliği ve renk özelliği doğrulanmalıdır.",
+    ),
+    (
+        "Piceus",
+        "Zift siyahı veya katran rengi",
+        ["Kar beyazı", "Zift siyahı veya katran rengi", "Leylak", "Gümüş"],
+        "Carex picea",
+        "Koyu renkli saz",
+        "'Piceus' zift siyahı veya katran rengi anlamına gelir. "
+        "Carex picea adındaki 'picea' aynı sözcük kökünün "
+        "dişil biçimidir. Bilimsel adın geçerliliği ve koyu "
+        "rengin görüldüğü organlar doğrulanmalıdır.",
+    ),
+    (
+        "Dilutus",
+        "Seyreltik veya soluk renkli",
+        ["Çok koyu", "Seyreltik veya soluk renkli", "Parlak siyah", "Altın rengi"],
+        "Gentiana diluta",
+        "Soluk renkli kantaron",
+        "'Dilutus' seyreltilmiş veya yoğunluğu azaltılmış anlamına "
+        "gelir. Gentiana diluta adındaki 'diluta' aynı kökün "
+        "dişil biçimidir. Bilimsel adın geçerliliği ve soluk "
+        "renk özelliği doğrulanmalıdır.",
     ),
     (
         "Clarus",
         "Açık, berrak veya parlak",
         ["Açık, berrak veya parlak", "Siyah", "Koyu kahverengi", "Kırmızı"],
-        "Botanik betimleme terimi",
-        "Açık renk",
-        "'Clarus' açık, berrak veya parlak anlamına gelir."
+        "Carex clara",
+        "Açık renkli saz",
+        "'Clarus' açık, berrak veya parlak anlamına gelir. Carex "
+        "clara adındaki 'clara' aynı kökün dişil biçimidir. "
+        "Bilimsel adın geçerliliği ve renk özelliği doğrulanmalıdır.",
+    ),
+    (
+        "Saturatus",
+        "Doygun veya yoğun renkli",
+        ["Soluk", "Doygun veya yoğun renkli", "Renksiz", "Şeffaf"],
+        "Rosa saturata",
+        "Yoğun renkli gül",
+        "'Saturatus' doygun veya yoğun renkli anlamına gelir. "
+        "Rosa saturata adındaki 'saturata' aynı kökün dişil "
+        "biçimidir. Bilimsel adın taksonomik geçerliliği ve "
+        "çiçek renginin yoğunluğu doğrulanmalıdır.",
     ),
     (
         "Opacus",
-        "Mat veya donuk",
-        ["Parlak", "Mat veya donuk", "Gümüş", "Kızıl"],
-        "Botanik betimleme terimi",
-        "Mat yüzey",
-        "'Opacus' mat veya donuk anlamına gelir."
+        "Mat, donuk veya ışık geçirmeyen",
+        ["Parlak", "Mat, donuk veya ışık geçirmeyen", "Gümüş", "Kızıl"],
+        "Carex opaca",
+        "Mat renkli saz",
+        "'Opacus' mat, donuk veya ışık geçirmeyen anlamına gelir. "
+        "Carex opaca adındaki 'opaca' aynı kökün dişil biçimidir. "
+        "Bilimsel adın geçerliliği ve mat yüzey özelliği "
+        "güvenilir botanik kaynaklardan doğrulanmalıdır.",
     ),
     (
-        "Fulvus",
-        "Sarımsı kahverengi",
-        ["Mavi", "Siyah", "Mor", "Sarımsı kahverengi"],
-        "Botanik betimleme terimi",
-        "Sarımsı kahverengi",
-        "'Fulvus' sarımsı kahverengi tonları ifade eder."
+        "Micans",
+        "Parıldayan veya ışıltılı",
+        ["Kül grisi", "Parıldayan veya ışıltılı", "Soluk", "Siyah"],
+        "Tibouchina micans",
+        "Parıldayan tibuçina",
+        "'Micans' parıldayan veya ışıldayan anlamına gelir. "
+        "Tibouchina micans adındaki 'micans' epiteti terimle "
+        "birebir aynıdır. Parlaklık özelliğinin hangi organlarda "
+        "görüldüğü güvenilir botanik kaynaklarla doğrulanmalıdır.",
+    ),
+
+    # ============================================================
+    # 5. SUB- ÖNEKLİ VE BENZER ANLAMLAR
+    # ============================================================
+    (
+        "Subalbus",
+        "Beyazımsı",
+        ["Kırmızı", "Beyazımsı", "Siyah", "Mavi"],
+        "Carex subalba",
+        "Beyazımsı saz",
+        "'Subalbus', beyaz anlamındaki 'albus' sıfatına yaklaşık "
+        "veya daha düşük derecede olma anlamı katan 'sub-' "
+        "önekinden oluşur. Carex subalba adındaki 'subalba' "
+        "aynı sözcük yapısının dişil biçimidir. Taksonun "
+        "geçerliliği ve beyazımsı renk özelliği doğrulanmalıdır.",
     ),
     (
-        "Fuscus",
-        "Koyu kahverengi veya esmer",
-        ["Açık mavi", "Koyu kahverengi veya esmer", "Kar beyazı", "Parlak pembe"],
-        "Botanik betimleme terimi",
-        "Koyu renk",
-        "'Fuscus' koyu veya esmer anlamına gelir."
+        "Subflavus",
+        "Sarımsı",
+        ["Gümüş", "Mor", "Sarımsı", "Koyu siyah"],
+        "Carex subflava",
+        "Sarımsı saz",
+        "'Subflavus', sarı anlamındaki 'flavus' sıfatına yaklaşık "
+        "veya daha düşük derecede olma anlamı katan 'sub-' "
+        "önekinden oluşur. Carex subflava adındaki 'subflava' "
+        "aynı sözcük yapısının dişil biçimidir. Taksonun "
+        "geçerliliği ve sarımsı renk özelliği doğrulanmalıdır.",
     ),
     (
-        "Pallens",
-        "Soluk veya solgun",
-        ["Çok koyu", "Altın rengi", "Soluk veya solgun", "Bakır rengi"],
-        "Botanik betimleme terimi",
-        "Soluk renk",
-        "'Pallens' soluk veya solgun anlamına gelir."
+        "Subrubens",
+        "Kırmızımsı",
+        ["Kırmızımsı", "Mavimsi", "Yeşilimsi", "Beyazımsı"],
+        "Silene subrubens",
+        "Kırmızımsı nakıl",
+        "'Subrubens', kırmızı anlamındaki 'ruber' sözcük ailesine "
+        "yaklaşık veya daha düşük derecede olma anlamı katan "
+        "'sub-' önekini ekler. Silene subrubens adındaki "
+        "'subrubens' terimle birebir aynıdır. Taksonun geçerliliği "
+        "ve kırmızımsı renk özelliği doğrulanmalıdır.",
     ),
     (
-        "Albicans",
-        "Beyazımsı veya beyazlaşan",
-        ["Siyahımsı", "Sarımsı", "Beyazımsı veya beyazlaşan", "Kızılımsı"],
-        "Botanik betimleme terimi",
-        "Beyazımsı yüzey",
-        "'Albicans' beyazımsı veya beyazlaşan anlamına gelir."
-    ),
-    (
-        "Lividus",
-        "Kurşuni veya mavimsi gri",
-        ["Altın sarısı", "Kurşuni veya mavimsi gri", "Pembe", "Yeşil"],
-        "Helleborus lividus",
-        "Mavimsi çöpleme",
-        "'Lividus' kurşuni, mavimsi gri veya soluk mor tonları ifade eder."
+        "Subviridis",
+        "Yeşilimsi",
+        ["Kızıl", "Gümüş", "Yeşilimsi", "Siyah"],
+        "Carex subviridis",
+        "Yeşilimsi saz",
+        "'Subviridis', yeşil anlamındaki 'viridis' sıfatına "
+        "yaklaşık veya daha düşük derecede olma anlamı katan "
+        "'sub-' önekinden oluşur. Carex subviridis adındaki "
+        "'subviridis' terimle birebir aynıdır. Taksonun "
+        "geçerliliği ve yeşilimsi renk özelliği doğrulanmalıdır.",
     ),
 ]
-
-
 # ============================================================
-# 4. SORU HAVUZUNU GÜVENLİ HAZIRLA
+# 4. SORU HAVUZUNU DOĞRULAMA
 # ============================================================
 
 def build_question_pool():
@@ -571,7 +874,6 @@ def build_question_pool():
             continue
 
         latin, answer, options, plant, plant_name, explanation = item
-
         latin = str(latin).strip()
         answer = str(answer).strip()
 
@@ -581,32 +883,33 @@ def build_question_pool():
         if latin.casefold() in seen:
             continue
 
-        clean_options = list(dict.fromkeys(
-            str(option).strip()
-            for option in options
-            if option is not None and str(option).strip()
-        ))
-
-        if answer not in clean_options:
-            clean_options.append(answer)
-
-        if len(clean_options) < 4:
-            continue
-
         seen.add(latin.casefold())
 
-        result.append({
-            "latin": latin,
-            "question": (
-                f"'{latin}' Latince botanik terimi "
-                "hangi renk veya özelliği ifade eder?"
-            ),
-            "answer": answer,
-            "options": clean_options,
-            "plant": str(plant),
-            "plant_name": str(plant_name),
-            "explanation": str(explanation),
-        })
+        options = list(
+            dict.fromkeys(
+                str(option).strip()
+                for option in options
+                if option is not None and str(option).strip()
+            )
+        )
+
+        if answer not in options:
+            options.append(answer)
+
+        if len(options) < 4:
+            continue
+
+        result.append(
+            {
+                "latin": latin,
+                "question": f"'{latin}' hangi rengi veya özelliği ifade eder?",
+                "answer": answer,
+                "options": options,
+                "plant": str(plant),
+                "plant_name": str(plant_name),
+                "explanation": str(explanation),
+            }
+        )
 
     return result
 
@@ -615,128 +918,22 @@ QUESTIONS = build_question_pool()
 
 
 # ============================================================
-# 5. SQLITE VERİTABANI
-# ============================================================
-
-def get_connection():
-    return sqlite3.connect(DB_PATH, timeout=15)
-
-
-def init_database():
-    with get_connection() as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS results (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                run_id TEXT UNIQUE NOT NULL,
-                student TEXT NOT NULL,
-                student_no TEXT NOT NULL,
-                correct INTEGER NOT NULL,
-                total INTEGER NOT NULL,
-                percentage REAL NOT NULL,
-                duration REAL NOT NULL,
-                completed_at TEXT NOT NULL
-            )
-        """)
-
-        conn.commit()
-
-
-def save_result():
-    run_id = st.session_state.get("run_id")
-
-    if not run_id:
-        return
-
-    if st.session_state.get("submitted_run_id") == run_id:
-        return
-
-    questions = st.session_state.get("quiz_questions", [])
-
-    if not questions:
-        return
-
-    started = st.session_state.get("start_time")
-
-    elapsed = (
-        max(0, round(time.time() - started, 2))
-        if started is not None
-        else 0.0
-    )
-
-    correct = int(st.session_state.get("score", 0))
-    total = len(questions)
-    percentage = round(correct / total * 100, 2)
-
-    with get_connection() as conn:
-        conn.execute(
-            """
-            INSERT OR IGNORE INTO results (
-                run_id,
-                student,
-                student_no,
-                correct,
-                total,
-                percentage,
-                duration,
-                completed_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now', 'localtime'))
-            """,
-            (
-                run_id,
-                st.session_state.get("name", ""),
-                st.session_state.get("student_no", ""),
-                correct,
-                total,
-                percentage,
-                elapsed,
-            ),
-        )
-        conn.commit()
-
-    st.session_state.elapsed_time = elapsed
-    st.session_state.submitted_run_id = run_id
-
-
-def load_results():
-    with get_connection() as conn:
-        return pd.read_sql_query(
-            """
-            SELECT
-                student AS 'Öğrenci',
-                student_no AS 'Öğrenci No',
-                correct AS 'Doğru',
-                total AS 'Toplam Soru',
-                percentage AS 'Başarı (%)',
-                ROUND(duration, 1) AS 'Süre (sn)',
-                completed_at AS 'Tamamlanma'
-            FROM results
-            ORDER BY percentage DESC, correct DESC, duration ASC
-            """,
-            conn,
-        )
-
-
-init_database()
-
-
-# ============================================================
-# 6. OTURUM DURUMU
+# 5. OTURUM DURUMU
 # ============================================================
 
 DEFAULTS = {
     "stage": "register",
     "name": "",
-    "student_no": "",
     "score": 0,
     "start_time": None,
     "elapsed_time": 0.0,
     "quiz_questions": [],
     "current_question": 0,
     "answers": [],
+    "leaderboard": [],
     "run_id": None,
     "submitted_run_id": None,
-    "feedback_index": None,
+    "quiz_length": 10,
 }
 
 for key, value in DEFAULTS.items():
@@ -749,7 +946,7 @@ for key, value in DEFAULTS.items():
 
 
 # ============================================================
-# 7. YARDIMCILAR
+# 6. YARDIMCI FONKSİYONLAR
 # ============================================================
 
 def safe_text(value):
@@ -759,17 +956,15 @@ def safe_text(value):
 def format_seconds(seconds):
     seconds = max(0, int(seconds))
     minutes, remaining = divmod(seconds, 60)
-
     if minutes:
         return f"{minutes} dk {remaining} sn"
-
     return f"{remaining} sn"
 
 
 def metric_card(label, value):
     st.markdown(
         f"""
-        <div class="metric">
+        <div class="metric-card">
             <div class="metric-label">{safe_text(label)}</div>
             <div class="metric-value">{safe_text(value)}</div>
         </div>
@@ -783,364 +978,350 @@ def make_balanced_questions(count):
         raise ValueError("Soru havuzu boş.")
 
     count = max(1, min(int(count), len(QUESTIONS)))
-    selected = random.sample(QUESTIONS, count)
+    source = QUESTIONS.copy()
+    random.shuffle(source)
+    selected = source[:count]
 
+    positions = [i % 4 for i in range(count)]
+    random.shuffle(positions)
+
+    all_answers = list(dict.fromkeys(q["answer"] for q in QUESTIONS))
     prepared = []
 
-    for q in selected:
-        correct = q["answer"]
-
+    for question, correct_position in zip(selected, positions):
+        correct_answer = question["answer"]
         distractors = [
-            option for option in q["options"]
-            if option != correct
+            option for option in question["options"] if option != correct_answer
         ]
-
         random.shuffle(distractors)
 
+        for answer in all_answers:
+            if answer != correct_answer and answer not in distractors:
+                distractors.append(answer)
+            if len(distractors) >= 3:
+                break
+
         if len(distractors) < 3:
-            other_answers = list(dict.fromkeys(
-                x["answer"]
-                for x in QUESTIONS
-                if x["answer"] != correct
-            ))
-
-            random.shuffle(other_answers)
-
-            for candidate in other_answers:
-                if candidate not in distractors:
-                    distractors.append(candidate)
-
-                if len(distractors) >= 3:
-                    break
-
-        options = list(dict.fromkeys(
-            [correct] + distractors[:3]
-        ))
-
-        if len(options) < 4:
             continue
 
-        options = options[:4]
-        random.shuffle(options)
+        options = distractors[:3]
+        options.insert(correct_position, correct_answer)
 
-        item = q.copy()
+        if len(set(options)) != 4:
+            continue
+
+        item = question.copy()
         item["options"] = options
         prepared.append(item)
 
     if not prepared:
-        raise ValueError("Geçerli soru oluşturulamadı.")
+        raise ValueError("Yeterli sayıda geçerli soru hazırlanamadı.")
 
     return prepared
 
 
-def start_quiz(name, student_no, count):
+def start_quiz(name, count):
+    name = str(name).strip()
+    if not name:
+        raise ValueError("Lütfen bir ad veya takma ad gir.")
+
     questions = make_balanced_questions(count)
 
-    st.session_state.update({
-        "stage": "quiz",
-        "name": name.strip(),
-        "student_no": student_no.strip(),
-        "score": 0,
-        "start_time": time.time(),
-        "elapsed_time": 0.0,
-        "quiz_questions": questions,
-        "current_question": 0,
-        "answers": [],
-        "run_id": str(uuid.uuid4()),
-        "submitted_run_id": None,
-        "feedback_index": None,
-    })
+    st.session_state.update(
+        {
+            "stage": "quiz",
+            "name": name,
+            "score": 0,
+            "start_time": time.time(),
+            "elapsed_time": 0.0,
+            "quiz_questions": questions,
+            "current_question": 0,
+            "answers": [],
+            "run_id": str(uuid.uuid4()),
+            "submitted_run_id": None,
+            "quiz_length": len(questions),
+        }
+    )
 
 
-def reset_quiz(clear_identity=False):
-    st.session_state.update({
-        "stage": "register",
-        "score": 0,
-        "start_time": None,
-        "elapsed_time": 0.0,
-        "quiz_questions": [],
-        "current_question": 0,
-        "answers": [],
-        "run_id": None,
-        "submitted_run_id": None,
-        "feedback_index": None,
-    })
+def save_result():
+    run_id = st.session_state.run_id
+    if not run_id or st.session_state.submitted_run_id == run_id:
+        return
 
-    if clear_identity:
+    questions = st.session_state.quiz_questions
+    if not questions:
+        return
+
+    start_time = st.session_state.start_time
+    elapsed = round(time.time() - start_time, 2) if start_time is not None else 0.0
+
+    st.session_state.elapsed_time = elapsed
+    st.session_state.leaderboard.append(
+        {
+            "İsim": st.session_state.name,
+            "Doğru Sayısı": st.session_state.score,
+            "Toplam Soru": len(questions),
+            "Başarı (%)": round(
+                st.session_state.score / len(questions) * 100,
+                1,
+            ),
+            "Süre (sn)": elapsed,
+        }
+    )
+    st.session_state.submitted_run_id = run_id
+
+
+def reset_quiz(clear_name=False):
+    st.session_state.update(
+        {
+            "stage": "register",
+            "score": 0,
+            "start_time": None,
+            "elapsed_time": 0.0,
+            "quiz_questions": [],
+            "current_question": 0,
+            "answers": [],
+            "run_id": None,
+            "submitted_run_id": None,
+        }
+    )
+    if clear_name:
         st.session_state.name = ""
-        st.session_state.student_no = ""
+
+
+def render_leaderboard():
+    records = st.session_state.leaderboard
+    if not records:
+        st.info("🌱 Henüz sonuç kaydedilmedi. İlk testi tamamlayarak liderlik tablosunu oluşturabilirsin.")
+        return
+
+    df = pd.DataFrame(records)
+    df = df.sort_values(
+        by=["Başarı (%)", "Doğru Sayısı", "Süre (sn)"],
+        ascending=[False, False, True],
+    ).reset_index(drop=True)
+    df.index = df.index + 1
+    df.index.name = "Sıra"
+
+    st.dataframe(
+        df[["İsim", "Doğru Sayısı", "Toplam Soru", "Başarı (%)", "Süre (sn)"]],
+        use_container_width=True,
+    )
 
 
 # ============================================================
-# 8. BAŞLIK
+# 7. EKRAN BİLEŞENLERİ
 # ============================================================
 
 def render_header():
     st.markdown(
         """
         <div class="hero">
-            <div style="
-                color:#7df0b8;
-                font-weight:850;
-                letter-spacing:.15em;
-                font-size:.78rem;
-            ">
-                🌿 BOTANICA AKADEMİ
-            </div>
-
+            <div class="eyebrow">🌿 BOTANICA AKADEMİ</div>
             <h1>Doğanın Dilini Keşfet.</h1>
-
             <p>
-                Latince botanik terimlerini öğren,
-                renklerin ve bitki özelliklerinin anlamlarını
-                keşfet, bilgini sınavla ölç.
+                Latince botanik terimlerini öğren, renklerin ardındaki anlamları keşfet ve bilgini test et.
             </p>
+            <div class="hero-badges">
+                <span class="badge">🌱 Botanik</span>
+                <span class="badge">📚 Latince</span>
+                <span class="badge">🎯 Bilgi Yarışması</span>
+            </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
-# ============================================================
-# 9. ÖĞRENCİ GİRİŞİ
-# ============================================================
-
 def render_register():
     render_header()
 
-    st.subheader("🌱 Öğrenci Sınav Girişi")
+    st.subheader("🌱 Yeni Bir Keşfe Başla")
 
     col1, col2, col3 = st.columns(3)
-
     with col1:
         metric_card("Soru havuzu", len(QUESTIONS))
-
     with col2:
-        metric_card("Seçenek", "4")
-
+        metric_card("Cevap seçeneği", "4")
     with col3:
-        metric_card("Sınav türü", "Botanik")
+        metric_card("Kategori", "Botanik")
 
     st.markdown('<div class="panel">', unsafe_allow_html=True)
-
     with st.form("register_form"):
         name = st.text_input(
-            "Ad soyad",
+            "Adın veya takma adın",
             value=st.session_state.name,
-            max_chars=70,
-            placeholder="Örn. Ayşe Yılmaz",
-        )
-
-        student_no = st.text_input(
-            "Öğrenci numarası",
-            value=st.session_state.student_no,
-            max_chars=40,
-            placeholder="Örn. 2026001",
+            placeholder="Örn. Botanica",
+            max_chars=50,
         )
 
         maximum = len(QUESTIONS)
+        count_options = sorted(set(n for n in [5, 10, 15, 20, 30, 40, 50, 60, maximum] if 1 <= n <= maximum)
+)
+        default_count = min(60, maximum)
 
-        count_options = [
-            n for n in [5, 10, 15, 20, 30, 40, maximum]
-            if 1 <= n <= maximum
-        ]
-
-        count_options = sorted(set(count_options))
 
         selected_count = st.selectbox(
-            "Soru sayısı",
-            options=count_options,
-            index=count_options.index(min(10, maximum)),
+            "Test uzunluğu",
+            count_options,
+            index=count_options.index(default_count),
             format_func=lambda n: f"{n} soru",
         )
 
         submitted = st.form_submit_button(
-            "Sınava Başla 🚀",
+            "Keşfe Başla 🚀",
             use_container_width=True,
             type="primary",
         )
-
     st.markdown("</div>", unsafe_allow_html=True)
 
     if submitted:
         if not name.strip():
-            st.error("Ad soyad alanını doldur.")
-
-        elif not student_no.strip():
-            st.error("Öğrenci numarasını doldur.")
-
+            st.warning("Lütfen adını veya bir takma ad gir.")
         else:
             try:
-                start_quiz(name, student_no, selected_count)
+                start_quiz(name, selected_count)
                 st.rerun()
-
             except (ValueError, TypeError, KeyError) as exc:
-                st.error(f"Sınav başlatılamadı: {exc}")
+                st.error(f"Test başlatılamadı: {exc}")
 
-    with st.expander("📖 Sınav hakkında"):
+    st.divider()
+    st.subheader("🏆 Liderlik Tablosu")
+    render_leaderboard()
+
+    # Hatalı/girintisiz kalan expander düzeltildi:
+    with st.expander("📖 Nasıl oynanır?"):
         st.markdown(
             """
-            - Her soruda yalnızca bir seçenek işaretlenir.
-            - Cevabını onayladıktan sonra sonraki soruya geçersin.
-            - Cevaplar sınav sonunda puanlanır.
-            - Sonuçlar uygulamanın SQLite veritabanına kaydedilir.
-            """
+            <div style="padding: 0.5rem; line-height: 1.7;">
+                <p>1. Adını yaz ve test uzunluğunu seç.</p>
+                <p>2. Karşına çıkan Latince terimin hangi renk veya özelliği ifade ettiğini bul.</p>
+                <p>3. Soruların ardından botanik açıklamalarını oku ve süreni yarışmaya dahil et!</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
         )
 
-
-# ============================================================
-# 10. SINAV
-# ============================================================
 
 def render_quiz():
     questions = st.session_state.quiz_questions
     index = st.session_state.current_question
 
     if not questions:
-        st.error("Sınav soruları bulunamadı.")
-
-        if st.button("Ana sayfaya dön"):
+        st.error("Soru bulunamadı. Lütfen yeni bir test başlatın.")
+        if st.button("Ana Sayfaya Dön"):
             reset_quiz()
             st.rerun()
-
         return
 
-    if index >= len(questions):
-        save_result()
+    if index < 0 or index >= len(questions):
         st.session_state.stage = "result"
         st.rerun()
         return
 
     q = questions[index]
-
     st.progress((index + 1) / len(questions))
 
     col1, col2 = st.columns(2)
-
     with col1:
         st.caption(f"Soru {index + 1} / {len(questions)}")
-
     with col2:
-        st.caption(f"Öğrenci: {st.session_state.name}")
+        st.caption(f"Puan: {st.session_state.score}")
 
     st.markdown(
         f"""
         <div class="panel">
-            <div style="
-                opacity:.7;
-                font-size:.8rem;
-                font-weight:800;
-                letter-spacing:.12em;
-            ">
-                LATİNCE BOTANİK
-            </div>
-
+            <div class="eyebrow">Botanik Terim</div>
             <div class="latin">{safe_text(q['latin'])}</div>
-
             <p>{safe_text(q['question'])}</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    form_key = f"form_{st.session_state.run_id}_{index}"
+    options = list(dict.fromkeys(q["options"]))
+    form_key = f"quiz_form_{st.session_state.run_id}_{index}"
 
     with st.form(form_key):
         selected = st.radio(
-            "Cevabını seç:",
-            options=q["options"],
+            "Cevabınızı seçin:",
+            options,
             index=None,
-            key=f"choice_{st.session_state.run_id}_{index}",
+            key=f"answer_{st.session_state.run_id}_{index}",
         )
-
         submitted = st.form_submit_button(
-            "Cevabı Onayla",
+            "Cevabı Kontrol Et ✨",
             use_container_width=True,
             type="primary",
         )
 
     if submitted:
         if selected is None:
-            st.warning("Devam etmeden önce bir seçenek işaretle.")
-            return
-
-        if len(st.session_state.answers) > index:
-            st.warning("Bu soru daha önce cevaplanmış.")
+            st.warning("Lütfen bir cevap seçin.")
             return
 
         is_correct = selected == q["answer"]
-
         if is_correct:
             st.session_state.score += 1
 
-        st.session_state.answers.append({
-            "latin": q["latin"],
-            "selected": selected,
-            "correct": q["answer"],
-            "is_correct": is_correct,
-            "plant": q["plant"],
-            "plant_name": q["plant_name"],
-            "explanation": q["explanation"],
-        })
-
-        st.session_state.feedback_index = index
+        st.session_state.answers.append(
+            {
+                "latin": q["latin"],
+                "question": q["question"],
+                "selected": selected,
+                "correct": q["answer"],
+                "is_correct": is_correct,
+                "plant": q["plant"],
+                "plant_name": q["plant_name"],
+                "explanation": q["explanation"],
+            }
+        )
         st.session_state.stage = "feedback"
         st.rerun()
 
 
-# ============================================================
-# 11. CEVAP SONRASI BİLGİLENDİRME
-# ============================================================
-
 def render_feedback():
     answers = st.session_state.answers
-    index = st.session_state.feedback_index
-
-    if index is None or index >= len(answers):
+    if not answers:
         st.session_state.stage = "quiz"
         st.rerun()
         return
 
-    answer = answers[index]
+    answer = answers[-1]
 
     if answer["is_correct"]:
-        st.success("🎉 Doğru cevap!")
+        st.success("🎉 Harika! Doğru cevap.")
     else:
-        st.error("Yanlış cevap.")
+        st.error(f"Yanlış cevap. Doğru cevap: **{safe_text(answer['correct'])}**")
 
-    # Sınav sırasında doğru yanıtı açıklamıyoruz.
-    # Böylece sonraki sorularda cevaplar hakkında ipucu verilmez.
-    st.info(
-        "Cevap açıklamaları ve doğru yanıtlar sınav bitiminde gösterilecektir."
+    st.markdown(
+        f"""
+        <div class="panel">
+            <div class="eyebrow">Botanik Bilgisi</div>
+            <div style="font-size: 1.2rem; font-weight: 800; font-style: italic;">
+                🌿 {safe_text(answer['plant'])}
+            </div>
+            <p style="opacity: 0.75; margin-top: 0.3rem;">{safe_text(answer['plant_name'])}</p>
+            <p style="margin-top: 0.8rem;">{safe_text(answer['explanation'])}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     current = st.session_state.current_question
     total = len(st.session_state.quiz_questions)
+    label = "Sonuçları Gör 🏆" if current + 1 >= total else "Sonraki Soru ➡️"
 
-    label = (
-        "Sınavı Bitir ve Sonuçları Gör 🏆"
-        if current + 1 >= total
-        else "Sonraki Soru ➡️"
-    )
-
-    if st.button(
-        label,
-        use_container_width=True,
-        type="primary",
-    ):
+    if st.button(label, use_container_width=True, type="primary"):
         if current + 1 >= total:
             save_result()
             st.session_state.stage = "result"
         else:
             st.session_state.current_question += 1
             st.session_state.stage = "quiz"
-
         st.rerun()
 
-
-# ============================================================
-# 12. SONUÇLAR
-# ============================================================
 
 def render_result():
     questions = st.session_state.quiz_questions
@@ -1148,202 +1329,77 @@ def render_result():
     score = st.session_state.score
 
     if total == 0:
-        st.warning("Sınav sonucu bulunamadı.")
-
-        if st.button("Ana sayfaya dön"):
+        st.warning("Gösterilecek test sonucu bulunamadı.")
+        if st.button("Ana Sayfaya Dön"):
             reset_quiz()
             st.rerun()
-
         return
 
-    save_result()
-
     percentage = score / total * 100
-
     if score == total:
         st.balloons()
 
     st.markdown(
         f"""
         <div class="hero">
-            <div style="
-                color:#7df0b8;
-                font-weight:850;
-                letter-spacing:.12em;
-            ">
-                SINAV TAMAMLANDI
-            </div>
-
-            <div style="
-                font-size:clamp(3rem,10vw,4.5rem);
-                font-weight:900;
-                margin:.5rem 0;
-            ">
-                {score} / {total}
-            </div>
-
-            <h2 style="color:white;">
-                Başarı oranı: %{percentage:.1f}
-            </h2>
-
-            <p>
-                Süre:
-                <strong>
-                    {safe_text(format_seconds(
-                        st.session_state.elapsed_time
-                    ))}
-                </strong>
+            <div class="eyebrow">Quiz Tamamlandı 🌿</div>
+            <div style="font-size: 3.5rem; font-weight: 900; margin: 0.5rem 0;">{score} / {total}</div>
+            <h2>Başarı oranı: %{percentage:.0f}</h2>
+            <p style="margin-top: 0.5rem;">
+                Tamamlanma süresi: <strong>{safe_text(format_seconds(st.session_state.elapsed_time))}</strong>
             </p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    col1, col2, col3 = st.columns(3)
+    if percentage >= 80:
+        st.success("Mükemmel! Botanik renk bilgine hâkim görünüyorsun.")
+    elif percentage >= 50:
+        st.info("Güzel iş! Birkaç tekrar ile daha da ilerleyebilirsin.")
+    else:
+        st.warning("Yeni bir turla bilgilerini geliştirebilirsin.")
 
-    with col1:
-        metric_card("Doğru", score)
-
-    with col2:
-        metric_card("Yanlış", total - score)
-
-    with col3:
-        metric_card("Başarı", f"%{percentage:.1f}")
-
-    st.subheader("📝 Cevaplarını İncele")
-
-    for i, answer in enumerate(st.session_state.answers, start=1):
-        with st.expander(
-            f"{i}. {answer['latin']} — "
-            f"{'✅ Doğru' if answer['is_correct'] else '❌ Yanlış'}"
-        ):
-            st.write(f"Verdiğin cevap: {answer['selected']}")
-            st.write(f"Doğru cevap: {answer['correct']}")
-
-            st.markdown(
-                f"**{safe_text(answer['plant'])}**"
-                f" — {safe_text(answer['plant_name'])}",
-                unsafe_allow_html=True,
-            )
-
-            st.write(answer["explanation"])
+    st.subheader("🏆 Liderlik Tablosu")
+    render_leaderboard()
 
     st.divider()
 
-    if st.button(
-        "Yeni Sınava Başla 🔄",
-        use_container_width=True,
-        type="primary",
-    ):
-        reset_quiz()
-        st.rerun()
+    with st.expander("📝 Cevaplarını İncele"):
+        for i, answer in enumerate(st.session_state.answers, start=1):
+            status = "✅ Doğru" if answer["is_correct"] else "❌ Yanlış"
+            st.markdown(f"**{i}. {answer['latin']} — {status}**")
+            st.write(f"Verdiğin cevap: {answer['selected']}")
+            st.write(f"Doğru cevap: {answer['correct']}")
+            st.caption(f"{answer['plant']} — {answer['plant_name']}")
+            st.write(answer["explanation"])
+            st.divider()
 
-    if st.button(
-        "Ana sayfaya dön",
-        use_container_width=True,
-    ):
-        reset_quiz(clear_identity=True)
-        st.rerun()
-
-
-# ============================================================
-# 13. ÖĞRETMEN PANELİ
-# ============================================================
-
-def render_teacher():
-    st.markdown(
-        """
-        <div class="hero">
-            <div class="eyebrow">ÖĞRETMEN PANELİ</div>
-            <h1>Sınav Sonuçları</h1>
-            <p>
-                Tamamlanan sınavları görüntüle ve sonuçları CSV
-                dosyası olarak indir.
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    password = st.text_input(
-        "Öğretmen şifresi",
-        type="password",
-        key="teacher_password",
-    )
-
-    # Üretim ortamında bu değeri ortam değişkeninden al.
-    expected_password = __import__("os").environ.get(
-        "BOTANICA_TEACHER_PASSWORD",
-        "",
-    )
-
-    if not expected_password:
-        st.warning(
-            "Öğretmen paneli etkin değil. "
-            "BOTANICA_TEACHER_PASSWORD ortam değişkenini ayarla."
-        )
-        return
-
-    if password != expected_password:
-        st.info("Sonuçları görmek için öğretmen şifresini gir.")
-        return
-
-    df = load_results()
-
-    st.metric("Tamamlanan sınav", len(df))
-
-    if df.empty:
-        st.info("Henüz tamamlanmış sınav yok.")
-        return
-
-    st.dataframe(
-        df,
-        use_container_width=True,
-        hide_index=True,
-    )
-
-    csv_data = df.to_csv(index=False).encode("utf-8-sig")
-
-    st.download_button(
-        "Sonuçları CSV olarak indir 📥",
-        data=csv_data,
-        file_name="botanica_sinav_sonuclari.csv",
-        mime="text/csv",
-        use_container_width=True,
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Tekrar Oyna 🔄", use_container_width=True):
+            reset_quiz()
+            st.rerun()
+    with col2:
+        if st.button("Ana Sayfaya Dön 🏠", use_container_width=True):
+            reset_quiz(clear_name=True)
+            st.rerun()
 
 
 # ============================================================
-# 14. UYGULAMA YÖNLENDİRME
+# 8. ANA YÖNLENDİRME
 # ============================================================
 
 if not QUESTIONS:
-    st.error("Soru havuzu boş veya geçersiz.")
-
+    st.error("Soru havuzu yüklenemedi. RAW_QUESTIONS listesini kontrol edin.")
+elif st.session_state.stage == "register":
+    render_register()
+elif st.session_state.stage == "quiz":
+    render_quiz()
+elif st.session_state.stage == "feedback":
+    render_feedback()
+elif st.session_state.stage == "result":
+    render_result()
 else:
-    with st.sidebar:
-        st.markdown("### 🌿 Botanica Akademi")
-
-        page = st.radio(
-            "Sayfa",
-            ["Öğrenci Sınavı", "Öğretmen Paneli"],
-        )
-
-    if page == "Öğretmen Paneli":
-        render_teacher()
-
-    elif st.session_state.stage == "register":
-        render_register()
-
-    elif st.session_state.stage == "quiz":
-        render_quiz()
-
-    elif st.session_state.stage == "feedback":
-        render_feedback()
-
-    elif st.session_state.stage == "result":
-        render_result()
-
-    else:
-        reset_quiz()
-        st.rerun()
+    st.session_state.stage = "register"
+    st.rerun()
