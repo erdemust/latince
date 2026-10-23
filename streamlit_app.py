@@ -1,22 +1,19 @@
+from pathlib import Path
 import pandas as pd
+import streamlit as st
 
-input_file = "bitki_terimleri.csv"
-output_file = "bitki_terimleri_duzenlenmis.csv"
+BASE_DIR = Path(__file__).resolve().parent
+input_file = BASE_DIR / "botanical_terms.csv"
 
-# CSV dosyasını oku
-df = pd.read_csv(input_file, encoding="utf-8-sig")
+if not input_file.exists():
+    st.error(f"CSV dosyası bulunamadı: {input_file}")
+    st.stop()
 
-# Yalnızca belirtilen sütunlardaki virgülleri | ile değiştir
-columns_to_update = ["options", "explanation"]
+df = pd.read_csv(
+    input_file,
+    encoding="utf-8-sig",
+    dtype=str
+).fillna("")
 
-for column in columns_to_update:
-    df[column] = df[column].str.replace(",", "|", regex=False)
-
-# Yeni CSV dosyasını kaydet
-df.to_csv(
-    output_file,
-    index=False,
-    encoding="utf-8-sig"
-)
-
-print(f"İşlem tamamlandı: {output_file}")
+st.title("🌿 Latince Bitki Terimleri")
+st.dataframe(df, use_container_width=True, hide_index=True)
