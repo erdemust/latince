@@ -1,4 +1,4 @@
-import datetime
+import time
 import pandas as pd
 import streamlit as st
 
@@ -6,140 +6,216 @@ import streamlit as st
 # SAYFA YAPILANDIRMASI
 # ==========================================
 st.set_page_config(
-    page_title="Quiz & Liderlik Tablosu", page_icon="🏆", layout="centered"
+    page_title="Botanikte Renkler Quiz & Liderlik Tablosu",
+    page_icon="🌿",
+    layout="centered",
 )
 
 # ==========================================
-# SESSION STATE BAŞLANGICI
+# SESSION STATE (OTURUM) BAŞLANGICI
 # ==========================================
-if "quiz_stage" not in st.session_state:
-  st.session_state.quiz_stage = "register"
+if "stage" not in st.session_state:
+  st.session_state.stage = "register"
 if "name" not in st.session_state:
   st.session_state.name = ""
 if "score" not in st.session_state:
   st.session_state.score = 0
-if "recorded" not in st.session_state:
-  st.session_state.recorded = False
+if "start_time" not in st.session_state:
+  st.session_state.start_time = 0.0
+if "elapsed_time" not in st.session_state:
+  st.session_state.elapsed_time = 0.0
 
-# Varsayılan örnek liderlik tablosu (İlk açılışta boş görünmesin diye)
+# Başlangıç için örnek liderlik tablosu
 if "leaderboard" not in st.session_state:
   st.session_state.leaderboard = [
-      {"İsim": "Zeynep K.", "Puan": 3, "Zaman": "10:12"},
-      {"İsim": "Ahmet Y.", "Puan": 2, "Zaman": "10:15"},
-      {"İsim": "Can M.", "Puan": 3, "Zaman": "10:20"},
+      {"İsim": "Linnaeus", "Doğru Sayısı": 5, "Süre (sn)": 14.2},
+      {"İsim": "Darwin", "Doğru Sayısı": 4, "Süre (sn)": 11.0},
+      {"İsim": "Mendel", "Doğru Sayısı": 3, "Süre (sn)": 9.5},
   ]
 
 # ==========================================
-# 1. ADIM: KULLANICI KAYDI
+# 1. ADIM: KAYIT VE SÜRE BAŞLANGICI
 # ==========================================
-if st.session_state.quiz_stage == "register":
-  st.title("📝 Python & Teknoloji Bilgi Yarışması")
+if st.session_state.stage == "register":
+  st.title("🌿 Latince Botanik Renkleri Quiz'i")
   st.markdown(
-      "Testi çözerek **Liderlik Tablosu'na (Top Scorers)** adını yazdır!"
+      "Botanik adlandırmalarındaki renk terimlerini ne kadar iyi biliyorsun?"
+      " Sorular **teker teker** sorulacak ve bitirdiğin an **süren"
+      " hesaplanarak** liderlik tablosuna işlenecektir!"
   )
 
-  with st.form("register_form"):
+  with st.form("reg_form"):
     name_input = st.text_input(
-        "Adınız Soyadınız:", placeholder="Örn: Alan Turing"
+        "Adınız Soyadınız:", placeholder="Örn: Karl Linnaeus"
     )
-    start_button = st.form_submit_button("Quiz'e Başla 🚀")
+    submitted = st.form_submit_button("Quiz'i Başlat 🚀")
 
-    if start_button:
-      if name_input.strip() == "":
-        st.warning("Lütfen geçerli bir ad girin!")
+    if submitted:
+      if not name_input.strip():
+        st.warning("Lütfen adınızı girin!")
       else:
-        st.session_state.name = name_input
-        st.session_state.recorded = (
-            False  # Yeni kullanıcı için kayıt bayrağını sıfırla
-        )
-        st.session_state.quiz_stage = "quiz"
+        st.session_state.name = name_input.strip()
+        st.session_state.score = 0
+        st.session_state.start_time = (
+            time.time()
+        )  # Kronometreyi buradan başlatıyoruz!
+        st.session_state.stage = "q1"
         st.rerun()
 
 # ==========================================
-# 2. ADIM: QUIZ SORULARI
+# 2. ADIM: SORULAR (TEKER TEKER)
 # ==========================================
-elif st.session_state.quiz_stage == "quiz":
-  st.title(f"🧠 Başarılar, {st.session_state.name}!")
-  st.write("Soruları dikkatlice yanıtlayın.")
 
-  with st.form("quiz_form"):
-    q1 = st.radio(
-        "1. Streamlit hangi programlama dili ile web uygulaması"
-        " geliştirmenizi sağlar?",
-        ["JavaScript", "Python", "C++", "HTML"],
+# Soru 1
+elif st.session_state.stage == "q1":
+  st.header("Soru 1 / 5")
+  st.info(
+      "Latince botanik terimlerinde **'Albus'** kelimesi hangi rengi ifade"
+      " eder?"
+  )
+
+  with st.form("q1_form"):
+    ans = st.radio(
+        "Seçiniz:",
+        ["Siyah (Niger)", "Beyaz (Albus)", "Kırmızı (Ruber)", "Sarı (Luteus)"],
     )
+    btn = st.form_submit_button("Sonraki Soru ➡️")
+    if btn:
+      if "Beyaz" in ans:
+        st.session_state.score += 1
+      st.session_state.stage = "q2"
+      st.rerun()
 
-    q2 = st.radio(
-        "2. ESP32-S3 mikrodenetleyicisi hangi kablosuz bağlantı"
-        " özelliklerine sahiptir?",
+# Soru 2
+elif st.session_state.stage == "q2":
+  st.header("Soru 2 / 5")
+  st.info(
+      "Latince botanik adlandırmalarında **'Viridis'** terimi ne anlama gelir?"
+  )
+
+  with st.form("q2_form"):
+    ans = st.radio(
+        "Seçiniz:",
         [
-            "Sadece Bluetooth",
-            "Sadece Kablolu Ethernet",
-            "Wi-Fi ve Bluetooth",
-            "Hiçbiri",
+            "Mavi (Caeruleus)",
+            "Yeşil (Viridis)",
+            "Kahverengi (Fuscus)",
+            "Altın sarısı (Aureus)",
         ],
     )
+    btn = st.form_submit_button("Sonraki Soru ➡️")
+    if btn:
+      if "Yeşil" in ans:
+        st.session_state.score += 1
+      st.session_state.stage = "q3"
+      st.rerun()
 
-    q3 = st.radio(
-        "3. Streamlit'te kullanıcı etkileşimleriyle anlık verileri"
-        " hatırlamak için hangi yapı kullanılır?",
-        ["st.session_state", "st.cache_data", "st.sidebar", "st.stop"],
+# Soru 3
+elif st.session_state.stage == "q3":
+  st.header("Soru 3 / 5")
+  st.info(
+      "Bir bitki tanımında **'Ruber'** sıfatı geçiyorsa, bu bitkinin hangi rengi"
+      " barındırdığı anlaşılır?"
+  )
+
+  with st.form("q3_form"):
+    ans = st.radio(
+        "Seçiniz:",
+        ["Mor (Purpureus)", "Kırmızı (Ruber)", "Pembe (Roseus)", "Gri (Canus)"],
     )
+    btn = st.form_submit_button("Sonraki Soru ➡️")
+    if btn:
+      if "Kırmızı" in ans:
+        st.session_state.score += 1
+      st.session_state.stage = "q4"
+      st.rerun()
 
-    submit_quiz = st.form_submit_button("Testi Tamamla ve Skoru Gör 🎯")
+# Soru 4
+elif st.session_state.stage == "q4":
+  st.header("Soru 4 / 5")
+  st.info("Botanik latincesinde **'Luteus'** terimi hangi rengin karşılığıdır?")
 
-    if submit_quiz:
-      score = 0
-      if q1 == "Python":
-        score += 1
-      if q2 == "Wi-Fi ve Bluetooth":
-        score += 1
-      if q3 == "st.session_state":
-        score += 1
+  with st.form("q4_form"):
+    ans = st.radio(
+        "Seçiniz:",
+        ["Sarı (Luteus)", "Turuncu (Aurantiacus)", "Mavi", "Beyaz"],
+    )
+    btn = st.form_submit_button("Sonraki Soru ➡️")
+    if btn:
+      if "Sarı" in ans:
+        st.session_state.score += 1
+      st.session_state.stage = "q5"
+      st.rerun()
 
-      st.session_state.score = score
-      st.session_state.quiz_stage = "result"
+# Soru 5
+elif st.session_state.stage == "q5":
+  st.header("Soru 5 / 5")
+  st.info("Latince botanik renk terimlerinden **'Niger'** neyi ifade eder?")
+
+  with st.form("q5_form"):
+    ans = st.radio(
+        "Seçiniz:", ["Siyah (Niger)", "Koyu Yeşil", "Gümüşi", "Parlak Sarı"]
+    )
+    btn = st.form_submit_button("Testi Bitir ve Skoru Gör 🎯")
+    if btn:
+      if "Siyah" in ans:
+        st.session_state.score += 1
+
+      # Süreyi hesapla (Başlangıç anı ile şimdi arasındaki fark)
+      end_time = time.time()
+      st.session_state.elapsed_time = round(
+          end_time - st.session_state.start_time, 2
+      )
+
+      # Sonucu liderlik tablosuna ekle
+      st.session_state.leaderboard.append({
+          "İsim": st.session_state.name,
+          "Doğru Sayısı": st.session_state.score,
+          "Süre (sn)": st.session_state.elapsed_time,
+      })
+
+      st.session_state.stage = "result"
       st.rerun()
 
 # ==========================================
-# 3. ADIM: SONUÇ VE LİDERLİK TABLOSU (TOP SCORERS)
+# 3. ADIM: SONUÇ VE AKILLI LİDERLİK TABLOSU
 # ==========================================
-elif st.session_state.quiz_stage == "result":
-  st.title("🏆 Quiz Sonucu & En İyi Skorlar")
+elif st.session_state.stage == "result":
+  st.title("🏆 Quiz Sonucu & Liderlik Tablosu")
 
-  score = st.session_state.score
-  total = 3
+  col1, col2 = st.columns(2)
+  with col1:
+    st.metric(label="Doğru Sayın", value=f"{st.session_state.score} / 5")
+  with col2:
+    st.metric(
+        label="Tamamlama Süren",
+        value=f"{st.session_state.elapsed_time} saniye",
+    )
 
-  st.metric(label="Senin Puanın", value=f"{score} / {total}")
-
-  # Kullanıcının skoru liderlik tablosuna sadece 1 kez eklensin
-  if not st.session_state.recorded:
-    current_time = datetime.datetime.now().strftime("%H:%M:%S")
-    st.session_state.leaderboard.append({
-        "İsim": st.session_state.name,
-        "Puan": score,
-        "Zaman": current_time,
-    })
-    st.session_state.recorded = True
-
-  if score == 3:
-    st.success("Mükemmel! Tüm soruları doğru bildin! 🎉")
+  if st.session_state.score == 5:
+    st.success(
+        "Mükemmel! Tüm botanik renk terimlerini kusursuz bildin! 🌿🌟"
+    )
   else:
-    st.info("Testi tamamladın! Skorun listeye eklendi. 👍")
+    st.info("Tebrikler! Liderlik tablosundaki yerini aldın. 👍")
 
   st.divider()
-  st.subheader("🌟 En İyi Skorlar Listesi (Leaderboard)")
+  st.subheader("🌟 En İyi Botanistler (Liderlik Tablosu)")
+  st.markdown(
+      "📌 *Sıralama Mantığı:* Önce **en yüksek doğru sayısı**, puanlar eşitse"
+      " **en kısa süre (saniye)** dikkate alınır."
+  )
 
-  # Tabloyu puana göre büyükten küçüğe sırala
-  df_leaderboard = pd.DataFrame(st.session_state.leaderboard)
-  df_leaderboard = df_leaderboard.sort_values(
-      by=["Puan", "Zaman"], ascending=[False, True]
+  # DataFrame oluştur ve akıllı sıralama yap: Doğru Sayısı (azalan), Süre (artan)
+  df_lb = pd.DataFrame(st.session_state.leaderboard)
+  df_lb = df_lb.sort_values(
+      by=["Doğru Sayısı", "Süre (sn)"], ascending=[False, True]
   ).reset_index(drop=True)
 
-  # Şık bir tablo formatında göster
-  st.dataframe(df_leaderboard, use_container_width=True)
+  # Liderlik tablosunu ekrana yazdır
+  st.dataframe(df_lb, use_container_width=True)
 
   st.divider()
-  if st.button("Yeniden Başla / Yeni Oyuncu 🔄"):
-    st.session_state.quiz_stage = "register"
+  if st.button("Yeniden Oyna 🔄"):
+    st.session_state.stage = "register"
     st.rerun()
