@@ -1,11 +1,8 @@
 import streamlit as st
 import pandas as pd
 import random
-import io
-
-# --------------------------------------------------
-# SAYFA AYARLARI
-# --------------------------------------------------
+import csv
+from io import StringIO
 
 st.set_page_config(
     page_title="Botanik Latince Öğrenme",
@@ -18,11 +15,7 @@ st.write("Latince bitki terimlerini öğren, bilgini test et!")
 
 st.divider()
 
-
-# --------------------------------------------------
-# CSV OKUMA FONKSİYONU
-# --------------------------------------------------
-
+# Gerekli sütunlar
 REQUIRED_COLUMNS = [
     "latin",
     "answer",
@@ -33,399 +26,311 @@ REQUIRED_COLUMNS = [
 ]
 
 
-def load_csv(uploaded_file):
-    """CSV dosyasını okur ve gerekli sütunları kontrol eder."""
+def read_csv_file(uploaded_file):
+    """CSV dosyasını farklı kodlamalar ve ayraçlarla okumayı dener."""
 
-    raw_data = uploaded_file.getvalue()
+    file_bytes = uploaded_file.getvalue()
 
-    df = None
-
-    for encoding in ["utf-8-sig", "utf-8", "cp1254", "latin1"]:
-        try:
-            df = pd.read_csv(
-                io.BytesIO(raw_data),
-                encoding=encoding,
-                dtype=str
-            )
-            break
-        except (UnicodeDecodeError, pd.errors.ParserError):
-            continue
-
-    if df is None:
-        raise ValueError("CSV dosyası okunamadı.")
-
-    # Sütun adlarının başındaki ve sonundaki boşlukları temizle.
-    df.columns = df.columns.str.strip()
-
-    missing = [
-        col for col in REQUIRED_COLUMNS
-        if col not in df.columns
+    encodings = [
+        "utf-8-sig",
+        "utf-8",
+        "cp1254",
+        "iso-8859-9",
+        "latin1"
     ]
 
-    if missing:
-        raise ValueError(
-            "CSV dosyasında eksik sütunlar var: "
-            + ", ".join(missing)
-        )
+    errors = []
 
-    # Boş değerleri temizle.
-    for col in REQUIRED_COLUMNS:
-        df[col] = df[col].fillna("").astype(str).str.strip()
+    for encoding in encodings:
+        try:
+            text = file_bytes.decode(encoding)
 
-    # Latince kelimesi veya cevabı olmayan satırları çıkar.
-    df = df[
-        (df["latin"] != "") &
-        (df["answer"] != "")
-    ].reset_index(drop=True)
+            # Ayraç karakterini belirle
+            try:
+                dialect = csv.Sniffer().sniff(
+                    text[:10000],
+                    delimiters=",;\t|"
+                )
+                separator = dialect.delimiter
+            except csv.Error:
+                separator = ","
 
-    if df.empty:
-        raise ValueError("CSV dosyasında geçerli soru bulunamadı.")
+            df = pd.read_csv(
+                StringIO(text),
+                sep=separator,
+                dtype=str,
+                keep_default_na=False,
+                on_bad_lines="error"
+            )
 
-    return df
+            # Sütun adlarını temizle
+            df.columns = [
+                str(col).strip().replace("\ufeff", "")
+                for col in df.columns
+            ]
+
+            # Sütun adlarında olası boşlukları temizle
+            df.columns = [
+                col.lower() for col in df.columns
+            ]
+
+            missing = [
+                col for col in REQUIRED_COLUMNS
+                if col not in df.columns
+            ]
+
+            if missing:
+                errors.append(
+                    f"{encoding}: Eksik sütunlar: {missing}"
+                )
+                continue
+
+            # Tamamen boş satırları kaldır
+            df = df.dropna(how="all")
+
+            # Boşlukları temizle
+            for col in REQUIRED_COLUMNS:
+                df[col] = df[col].astype(str).str.strip()
+
+            # Latince kelimesi veya cevabı boş olan satırları kaldır
+            df = df[
+                (df["latin"] != "") &
+                (df["answer"] != "")
+            ].reset_index(drop=True)
+
+            if df.empty:
+                errors.append(
+                    f"{encoding}: Kullanılabilir veri bulunamadı."
+                )
+                continue
+
+            return df, None
+
+        except Exception as e:
+            errors.append(f"{encoding}: {str(e)}")
+
+    return None, "\n".join(errors)
 
 
-# --------------------------------------------------
-# OTURUM DURUMU
-# --------------------------------------------------
-
-def initialize_quiz(df, shuffle=True):
-    """Yeni bir quiz oturumu başlatır."""
-
-    order = list(range(len(df)))
-
-    if shuffle:
-        random.shuffle(order)
-
-    st.session_state.question_order = order
-    st.session_state.question_index = 0
-    st.session_state.score = 0
-    st.session_state.answered = False
-    st.session_state.selected_answer = None
-    st.session_state.finished = False
-    st.session_state.correct_count = 0
-    st.session_state.wrong_count = 0
-
-
-# --------------------------------------------------
-# CSV DOSYASI YÜKLEME
-# --------------------------------------------------
-
+# CSV yükleme
 uploaded_file = st.file_uploader(
     "📂 CSV dosyanızı yükleyin",
     type=["csv"]
 )
 
-if uploaded_file is None:
-    st.info(
-        "Başlamak için latin, answer, options, plant, "
-        "plant_name ve explanation sütunlarını içeren "
-        "CSV dosyanızı yükleyin."
+if uploaded_file is not None:
+
+    df, error = read_csv_file(uploaded_file)
+
+    if error:
+        st.error("CSV dosyası okunamadı.")
+        with st.expander("Hata ayrıntılarını göster"):
+            st.code(error)
+
+        st.info(
+            "Dosyanın ilk satırında latin, answer, options, "
+            "plant, plant_name ve explanation sütunları "
+            "bulunmalıdır."
+        )
+
+        st.stop()
+
+    st.success(
+        f"✅ CSV başarıyla yüklendi! "
+        f"{len(df)} terim bulundu."
     )
 
-    st.code(
-        "latin,answer,options,plant,plant_name,explanation\n"
-        'Glaber,Tüysüz veya pürüzsüz,'
-        '"Tüylü;Tüysüz veya pürüzsüz;Dikenli;Benekli",'
-        'Acer glabrum,Pürüzsüz akçaağaç,'
-        '"Glaber Latince tüysüz veya pürüzsüz anlamına gelir."',
-        language="csv"
+    # Oturum değişkenlerini başlat
+    if (
+        "quiz_data" not in st.session_state
+        or st.session_state.get("file_name") != uploaded_file.name
+    ):
+        st.session_state.quiz_data = df.to_dict("records")
+        st.session_state.file_name = uploaded_file.name
+        st.session_state.question_index = 0
+        st.session_state.score = 0
+        st.session_state.answered = False
+        st.session_state.used_questions = []
+        st.session_state.selected_option = None
+
+    quiz_data = st.session_state.quiz_data
+
+    if not quiz_data:
+        st.warning("CSV dosyasında soru bulunamadı.")
+        st.stop()
+
+    total_questions = len(quiz_data)
+
+    # İlerleme
+    progress = min(
+        st.session_state.question_index / total_questions,
+        1.0
     )
 
-    st.stop()
+    st.progress(progress)
 
-
-# --------------------------------------------------
-# DOSYAYI OKU
-# --------------------------------------------------
-
-try:
-    df = load_csv(uploaded_file)
-except (ValueError, pd.errors.ParserError) as e:
-    st.error(str(e))
-    st.stop()
-
-
-# Dosya değiştiğinde quiz'i sıfırla.
-file_signature = (
-    uploaded_file.name,
-    uploaded_file.size,
-    hash(uploaded_file.getvalue())
-)
-
-if st.session_state.get("file_signature") != file_signature:
-    st.session_state.file_signature = file_signature
-    initialize_quiz(df)
-
-
-# --------------------------------------------------
-# YAN PANEL
-# --------------------------------------------------
-
-with st.sidebar:
-    st.header("⚙️ Quiz Ayarları")
-
-    shuffle_questions = st.checkbox(
-        "Soruları karıştır",
-        value=True
+    st.write(
+        f"**Soru:** "
+        f"{min(st.session_state.question_index + 1, total_questions)}"
+        f" / {total_questions}"
     )
 
-    shuffle_options = st.checkbox(
-        "Cevap seçeneklerini karıştır",
-        value=True
-    )
+    st.write(f"🏆 **Doğru cevap:** {st.session_state.score}")
+
+    # Tüm sorular tamamlandı mı?
+    if st.session_state.question_index >= total_questions:
+
+        st.balloons()
+        st.success("🎉 Test tamamlandı!")
+
+        st.subheader("Sonuçlar")
+
+        st.metric(
+            "Doğru cevap sayısı",
+            st.session_state.score
+        )
+
+        st.metric(
+            "Başarı oranı",
+            f"%{st.session_state.score / total_questions * 100:.1f}"
+        )
+
+        if st.button("🔄 Testi yeniden başlat"):
+            st.session_state.question_index = 0
+            st.session_state.score = 0
+            st.session_state.answered = False
+            st.session_state.used_questions = []
+            st.session_state.selected_option = None
+
+            random.shuffle(st.session_state.quiz_data)
+            st.rerun()
+
+        st.stop()
+
+    # Soruyu seç
+    current = quiz_data[st.session_state.question_index]
 
     st.divider()
 
-    st.metric("📚 Toplam terim", len(df))
+    st.subheader("🌱 Bu Latince kelimenin Türkçe karşılığı nedir?")
 
-    st.caption(
-        "Her soruda Latince terimin Türkçe karşılığını "
-        "bulmaya çalışın."
+    st.markdown(
+        f"<h2 style='text-align:center; color:#228B22;'>"
+        f"{current['latin']}</h2>",
+        unsafe_allow_html=True
     )
 
-    if st.button("🔄 Quiz'i yeniden başlat", use_container_width=True):
-        initialize_quiz(df, shuffle=shuffle_questions)
-        st.rerun()
-
-
-# --------------------------------------------------
-# QUIZ SONUÇ EKRANI
-# --------------------------------------------------
-
-if st.session_state.finished:
-
-    st.success("🎉 Quiz tamamlandı!")
-
-    total = len(st.session_state.question_order)
-    correct = st.session_state.correct_count
-    wrong = st.session_state.wrong_count
-
-    percentage = (correct / total * 100) if total else 0
-
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric("Toplam soru", total)
-    col2.metric("Doğru cevap", correct)
-    col3.metric("Başarı oranı", f"%{percentage:.1f}")
-
-    st.progress(percentage / 100)
-
-    if percentage >= 90:
-        st.balloons()
-        st.success("Mükemmel! Botanik Latince bilginiz çok iyi.")
-    elif percentage >= 70:
-        st.success("Çok iyi! Biraz daha pratikle daha da gelişebilirsiniz.")
-    elif percentage >= 50:
-        st.info("İyi bir başlangıç! Açıklamaları tekrar inceleyin.")
-    else:
-        st.info("Kelimeleri tekrar ederek bilginizi geliştirebilirsiniz.")
-
-    if st.button("🔁 Yeniden çöz", use_container_width=True):
-        initialize_quiz(df, shuffle=shuffle_questions)
-        st.rerun()
-
-    st.stop()
-
-
-# --------------------------------------------------
-# SORU BİLGİLERİ
-# --------------------------------------------------
-
-question_number = st.session_state.question_index
-total_questions = len(st.session_state.question_order)
-
-if question_number >= total_questions:
-    st.session_state.finished = True
-    st.rerun()
-
-row_index = st.session_state.question_order[question_number]
-row = df.iloc[row_index]
-
-
-# --------------------------------------------------
-# İLERLEME DURUMU
-# --------------------------------------------------
-
-st.progress(question_number / total_questions)
-
-st.caption(
-    f"📖 Soru {question_number + 1} / {total_questions}"
-)
-
-st.metric("🏆 Puanınız", st.session_state.score)
-
-st.divider()
-
-
-# --------------------------------------------------
-# LATİNCE KELİME SORUSU
-# --------------------------------------------------
-
-st.subheader("❓ Bu Latince kelimenin Türkçe karşılığı nedir?")
-
-st.markdown(
-    f"""
-    <div style="
-        background-color: #e8f5e9;
-        padding: 28px;
-        border-radius: 15px;
-        text-align: center;
-        border: 1px solid #a5d6a7;
-    ">
-        <h1 style="color: #1b5e20; margin: 0;">
-            {row['latin']}
-        </h1>
-        <p style="color: #2e7d32; margin-bottom: 0;">
-            Latince botanik terimi
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True
-)
-
-st.write("")
-
-# --------------------------------------------------
-# CEVAP SEÇENEKLERİ
-# --------------------------------------------------
-
-# CSV'de seçenekler virgül veya noktalı virgülle ayrılmış olabilir.
-raw_options = str(row["options"])
-
-if ";" in raw_options:
+    # Şıkları CSV içindeki options sütunundan al
     options = [
         option.strip()
-        for option in raw_options.split(";")
-        if option.strip()
-    ]
-else:
-    options = [
-        option.strip()
-        for option in raw_options.split(",")
+        for option in current["options"].split(",")
         if option.strip()
     ]
 
-# Doğru cevap seçeneklerde yoksa ekle.
-if row["answer"] not in options:
-    options.append(row["answer"])
+    # Doğru cevap seçenekler arasında yoksa ekle
+    if current["answer"] not in options:
+        options.append(current["answer"])
 
-# Aynı seçeneğin birden fazla görünmesini önle.
-options = list(dict.fromkeys(options))
+    # Seçeneklerin sırasını karıştır
+    if "options_question" not in st.session_state:
+        st.session_state.options_question = -1
 
-# Seçenekleri her soruda yeniden karıştır.
-if (
-    shuffle_options
-    and st.session_state.get("last_option_question") != question_number
-):
-    random.shuffle(options)
-    st.session_state.last_option_question = question_number
-    st.session_state.current_options = options
-elif shuffle_options:
-    options = st.session_state.get("current_options", options)
-
-if not shuffle_options:
-    options = options
-
-
-# --------------------------------------------------
-# CEVAP FORMU
-# --------------------------------------------------
-
-if not st.session_state.answered:
-
-    with st.form(key=f"question_form_{question_number}"):
-
-        selected = st.radio(
-            "Doğru cevabı seçin:",
-            options,
-            index=None,
-            key=f"answer_{question_number}"
+    if (
+        st.session_state.options_question
+        != st.session_state.question_index
+    ):
+        random.shuffle(options)
+        st.session_state.current_options = options
+        st.session_state.options_question = (
+            st.session_state.question_index
         )
 
-        submitted = st.form_submit_button(
-            "✅ Cevabımı kontrol et",
-            use_container_width=True
-        )
+    selected = st.radio(
+        "Doğru cevabı seç:",
+        st.session_state.current_options,
+        index=None,
+        key=f"answer_{st.session_state.question_index}",
+        disabled=st.session_state.answered
+    )
 
-        if submitted:
+    # Cevabı kontrol et
+    if not st.session_state.answered:
+
+        if st.button("✅ Cevabı kontrol et", use_container_width=True):
 
             if selected is None:
-                st.warning("Lütfen bir cevap seçin.")
+                st.warning("Lütfen bir seçenek işaretleyin.")
             else:
-                st.session_state.selected_answer = selected
+                st.session_state.selected_option = selected
                 st.session_state.answered = True
 
-                if selected == row["answer"]:
-                    st.session_state.score += 10
-                    st.session_state.correct_count += 1
-                else:
-                    st.session_state.wrong_count += 1
+                if selected == current["answer"]:
+                    st.session_state.score += 1
 
                 st.rerun()
 
+    # Cevap sonrası bitki bilgilerini göster
+    if st.session_state.answered:
 
-# --------------------------------------------------
-# CEVAP SONRASI AÇIKLAMA
-# --------------------------------------------------
+        if (
+            st.session_state.selected_option
+            == current["answer"]
+        ):
+            st.success("🎉 Doğru cevap!")
+        else:
+            st.error(
+                f"❌ Yanlış cevap. Doğru cevap: "
+                f"{current['answer']}"
+            )
 
-if st.session_state.answered:
+        st.divider()
 
-    selected = st.session_state.selected_answer
-    correct_answer = row["answer"]
-
-    if selected == correct_answer:
-        st.success("🎉 Doğru cevap! +10 puan")
-    else:
-        st.error("❌ Yanlış cevap!")
+        st.subheader("🌿 Örnek bitki")
 
         st.markdown(
-            f"**Doğru cevap:** {correct_answer}"
+            f"### {current['plant_name']}"
         )
 
-    st.divider()
+        st.markdown(
+            f"**Bilimsel adı:** *{current['plant']}*"
+        )
 
-    # Bitki bilgileri
-    st.subheader("🌱 Bitki örneği")
+        st.markdown(
+            f"**Latince terim:** {current['latin']}"
+        )
 
-    st.markdown(
-        f"""
-        **Bilimsel adı:** *{row['plant']}*
+        st.markdown(
+            f"**Türkçe anlamı:** {current['answer']}"
+        )
 
-        **Türkçe adı:** {row['plant_name']}
-        """
-    )
+        st.subheader("📖 Açıklama")
 
-    # Açıklama
-    st.subheader("📘 Açıklama")
-
-    st.info(row["explanation"])
-
-    st.caption(
-        "Not: CSV'deki bitki adları ve botanik açıklamalar "
-        "bilimsel kaynaklardan ayrıca doğrulanabilir."
-    )
-
-    st.divider()
-
-    # Sonraki soru
-    if question_number + 1 < total_questions:
+        st.write(current["explanation"])
 
         if st.button(
             "➡️ Sonraki soru",
-            type="primary",
             use_container_width=True
         ):
             st.session_state.question_index += 1
             st.session_state.answered = False
-            st.session_state.selected_answer = None
+            st.session_state.selected_option = None
             st.rerun()
 
-    else:
+else:
+    st.info(
+        "Başlamak için botanical_terms.csv dosyanızı yükleyin."
+    )
 
-        if st.button(
-            "🏁 Sonuçları gör",
-            type="primary",
-            use_container_width=True
-        ):
-            st.session_state.finished = True
-            st.rerun()
+    st.markdown(
+        """
+        ### 📚 Nasıl çalışır?
+
+        1. CSV dosyanızı yüklersiniz.
+        2. Ekranda bir Latince botanik terimi belirir.
+        3. Dört Türkçe seçenek arasından doğru anlamı seçersiniz.
+        4. Cevabınızı kontrol edersiniz.
+        5. Doğru cevapla birlikte örnek bitki, bilimsel adı
+           ve botanik açıklaması gösterilir.
+        6. Test sonunda başarı yüzdenizi görürsünüz.
+        """
+    )
