@@ -23,16 +23,16 @@ st.set_page_config(
 APP_TITLE = "🌿 Botanical Latin Quiz"
 DEFAULT_CSV = Path(__file__).parent / "botanical_terms.csv"
 
-REQUIRED_COLUMNS = {
+REQUIRED_COLUMNS = [
     "latin",
     "answer",
     "options",
-}
-
-OPTION_SEPARATOR = ","
+    "plant",
+    "plant_name",
+    "explanation",
+]
 
 st.title(APP_TITLE)
-
 st.caption(
     "Learn botanical Latin through interactive multiple-choice quizzes."
 )
@@ -42,9 +42,7 @@ st.caption(
 # SESSION STATE
 # ============================================================
 
-def initialize_state() -> None:
-    """Initialize session state without overwriting existing progress."""
-
+def initialize_state():
     defaults = {
         "quiz_questions": [],
         "current_question": 0,
@@ -55,6 +53,7 @@ def initialize_state() -> None:
         "quiz_started": False,
         "question_results": [],
         "quiz_config": None,
+        "question_selections": {},
     }
 
     for key, value in defaults.items():
@@ -62,9 +61,7 @@ def initialize_state() -> None:
             st.session_state[key] = value
 
 
-def reset_quiz() -> None:
-    """Reset quiz progress."""
-
+def reset_quiz():
     st.session_state.quiz_questions = []
     st.session_state.current_question = 0
     st.session_state.score = 0
@@ -74,17 +71,18 @@ def reset_quiz() -> None:
     st.session_state.quiz_started = False
     st.session_state.question_results = []
     st.session_state.quiz_config = None
+    st.session_state.question_selections = {}
 
 
 initialize_state()
 
 
 # ============================================================
-# CSV PARSING
+# FAILSAFE CSV LOADING
 # ============================================================
 
 def decode_csv(raw_bytes: bytes) -> str:
-    """Decode CSV bytes using common encodings."""
+    """Decode CSV files with common encodings."""
 
     for encoding in ("utf-8-sig", "utf-8", "cp1254", "latin-1"):
         try:
@@ -93,23 +91,22 @@ def decode_csv(raw_bytes: bytes) -> str:
             continue
 
     raise ValueError(
-        "Could not decode the CSV. Save it as UTF-8 and try again."
+        "Could not decode the CSV file. Save it as UTF-8."
     )
-
-
-def normalize_column_name(name: str) -> str:
-    """Normalize column names."""
-
-    return name.strip().lower().lstrip("\ufeff")
 
 
 def parse_csv_text(text: str) -> pd.DataFrame:
     """
-    Parse CSV with Python's CSV reader.
+    Parse CSV safely.
 
-    Properly quoted commas inside fields are supported.
-    Rows with the wrong number of fields produce a clear error.
+    Correctly quoted commas are preserved.
+    Rows with missing fields are rejected with diagnostics.
+    Extra fields are repaired only when the explanation field
+    can be reconstructed without ambiguity.
     """
+
+    if not text or not text.strip():
+        raise ValueError("The CSV file is empty.")
 
     try:
         reader = csv.reader(
@@ -117,63 +114,108 @@ def parse_csv_text(text: str) -> pd.DataFrame:
             strict=True,
             skipinitialspace=True,
         )
-
         rows = list(reader)
 
     except csv.Error as exc:
         raise ValueError(
-            f"Malformed CSV: {exc}. Check quotation marks and commas."
+            f"Malformed CSV quoting: {exc}. "
+            "Check quotation marks in your CSV file."
         ) from exc
 
     rows = [
-        row
-        for row in rows
-        if any(cell.strip() for cell in row)
+        row for row in rows
+        if any(str(cell).strip() for cell in row)
     ]
 
     if not rows:
-        raise ValueError("The CSV file is empty.")
+        raise ValueError("The CSV contains no records.")
 
     headers = [
-        normalize_column_name(column)
-        for column in rows[0]
+        str(value).strip().lower().lstrip("\ufeff")
+        for value in rows[0]
     ]
 
     if len(headers) != len(set(headers)):
-        raise ValueError("Duplicate column names were found.")
+        raise ValueError(
+            "Duplicate column names found in the CSV."
+        )
 
-    missing = REQUIRED_COLUMNS - set(headers)
+    missing = [
+        column for column in REQUIRED_COLUMNS
+        if column not in headers
+    ]
 
     if missing:
         raise ValueError(
-            "Missing required columns: "
-            + ", ".join(sorted(missing))
-            + ". Required columns: latin, answer, options."
+            f"Missing columns: {', '.join(missing)}. "
+            f"Required columns: {', '.join(REQUIRED_COLUMNS)}."
         )
 
+    has_category = "category" in headers
+
+    if not has_category:
+        headers.append("category")
+
     expected_fields = len(headers)
+    explanation_index = headers.index("explanation")
+
     valid_rows = []
     errors = []
+    recovered_lines = []
 
-    for line_number, row in enumerate(rows[1:], start=2):
+    for line_number, original in enumerate(rows[1:], start=2):
+        row = [str(value).strip() for value in original]
+
+        # Compatibility with the six-column CSV format.
+        if not has_category and len(row) == expected_fields - 1:
+            row.append("Uncategorized")
+
+        # If fields are missing, do not guess their contents.
+        if len(row) < expected_fields:
+            errors.append(
+                f"Line {line_number}: expected "
+                f"{expected_fields} fields, found {len(original)}."
+            )
+            continue
+
+        # Repair extra fields by merging them into explanation.
+        if len(row) > expected_fields:
+            explanation_end = (
+                len(row)
+                - (expected_fields - explanation_index - 1)
+            )
+
+            row = (
+                row[:explanation_index]
+                + [
+                    ",".join(
+                        row[explanation_index:explanation_end]
+                    )
+                ]
+                + row[explanation_end:]
+            )
+
+            if len(row) == expected_fields:
+                recovered_lines.append(line_number)
+
         if len(row) != expected_fields:
             errors.append(
-                f"CSV line {line_number}: expected "
-                f"{expected_fields} fields but found {len(row)}."
+                f"Line {line_number}: could not repair "
+                "the CSV record safely."
             )
-        else:
-            valid_rows.append(row)
+            continue
+
+        valid_rows.append(row)
 
     if errors:
         raise ValueError(
-            "The CSV structure is invalid:\n\n"
-            + "\n".join(errors[:10])
-            + "\n\nCheck the indicated lines. "
-            "No malformed rows were silently discarded."
+            "CSV structure validation failed:\n\n"
+            + "\n".join(errors[:12])
+            + "\n\nFix the affected rows and upload the CSV again."
         )
 
     if not valid_rows:
-        raise ValueError("The CSV contains no question rows.")
+        raise ValueError("The CSV contains no valid data rows.")
 
     df = pd.DataFrame(valid_rows, columns=headers)
 
@@ -185,82 +227,52 @@ def parse_csv_text(text: str) -> pd.DataFrame:
             .str.strip()
         )
 
-    # Category is optional for compatibility with older datasets.
-    if "category" not in df.columns:
-        df["category"] = "Uncategorized"
-
-    df["category"] = (
-        df["category"]
-        .replace("", "Uncategorized")
+    df["category"] = df["category"].replace(
+        "",
+        "Uncategorized",
     )
 
-    # Optional columns are created when missing.
-    optional_columns = [
-        "plant",
-        "plant_name",
-        "explanation",
-    ]
-
-    for column in optional_columns:
-        if column not in df.columns:
-            df[column] = ""
-
-    # Check essential fields.
     for column in ("latin", "answer", "options"):
-        empty_rows = df.index[df[column].eq("")].tolist()
+        empty = df[column].eq("")
 
-        if empty_rows:
-            lines = ", ".join(
+        if empty.any():
+            lines = [
                 str(index + 2)
-                for index in empty_rows[:10]
-            )
+                for index in df.index[empty][:10]
+            ]
 
             raise ValueError(
                 f"Required field '{column}' is empty "
-                f"on CSV line(s): {lines}."
+                f"on CSV row(s): {', '.join(lines)}."
             )
 
-    # Remove exact duplicate records.
     df = df.drop_duplicates().reset_index(drop=True)
 
-    if df.empty:
-        raise ValueError("No questions remain after removing duplicates.")
+    if recovered_lines:
+        st.sidebar.warning(
+            f"Recovered {len(recovered_lines)} CSV row(s) "
+            "by merging extra fields into explanations."
+        )
 
     return df
 
 
-def load_csv_file(path: Path) -> pd.DataFrame:
-    """Load the default CSV file."""
-
-    if not path.exists():
-        raise FileNotFoundError(
-            f"'{path.name}' was not found. Place it next to "
-            "streamlit_app.py or upload it using the sidebar."
-        )
-
-    return parse_csv_text(decode_csv(path.read_bytes()))
-
-
-# ============================================================
-# QUESTION VALIDATION
-# ============================================================
-
 def split_options(value: str) -> list[str]:
-    """Split the options field into distinct answer choices."""
+    """Split the options field into answer choices."""
 
     return [
-        option.strip()
-        for option in value.split(OPTION_SEPARATOR)
-        if option.strip()
+        item.strip()
+        for item in value.split(",")
+        if item.strip()
     ]
 
 
 def validate_questions(
     df: pd.DataFrame,
 ) -> tuple[pd.DataFrame, list[str]]:
-    """Validate questions and return valid questions plus warnings."""
+    """Validate quiz questions and return diagnostics."""
 
-    cleaned_rows = []
+    valid = []
     warnings = []
 
     for index, row in df.iterrows():
@@ -268,34 +280,32 @@ def validate_questions(
         answer = row["answer"].strip()
         options = split_options(row["options"])
 
-        # Remove duplicate choices without changing their order.
+        # Remove duplicate choices while preserving order.
         unique_options = list(dict.fromkeys(options))
 
         if len(unique_options) < 2:
             warnings.append(
-                f"{latin}: fewer than two distinct answer choices."
+                f"Row {index + 2} ({latin}): "
+                "fewer than two distinct choices."
             )
             continue
 
-        # Find the answer without case-sensitive matching.
-        normalized_options = {
-            option.casefold(): option
-            for option in unique_options
-        }
+        matching = [
+            option for option in unique_options
+            if option.casefold() == answer.casefold()
+        ]
 
-        if answer.casefold() not in normalized_options:
+        if not matching:
             warnings.append(
-                f"{latin}: the correct answer does not match "
-                "any available option."
+                f"Row {index + 2} ({latin}): "
+                "the answer does not match any option."
             )
             continue
 
-        # Keep the exact answer text from the choices.
-        correct_answer = normalized_options[answer.casefold()]
+        item = row.to_dict()
 
-        question = row.to_dict()
-        question["answer"] = correct_answer
-        question["options_list"] = unique_options
+        item["answer"] = matching[0]
+        item["options_list"] = unique_options
 
         for column in (
             "category",
@@ -303,28 +313,24 @@ def validate_questions(
             "plant_name",
             "explanation",
         ):
-            question[column] = str(
-                question.get(column, "")
-            ).strip()
+            item[column] = str(item.get(column, "")).strip()
 
-        if not question["category"]:
-            question["category"] = "Uncategorized"
+        if not item["category"]:
+            item["category"] = "Uncategorized"
 
-        cleaned_rows.append(question)
+        valid.append(item)
 
-    if not cleaned_rows:
+    if not valid:
         raise ValueError(
-            "No valid questions were found. Check that every answer "
-            "appears among its question's options."
+            "No valid questions remain. Check the CSV answers "
+            "and options."
         )
 
-    result = pd.DataFrame(cleaned_rows).reset_index(drop=True)
-
-    return result, warnings
+    return pd.DataFrame(valid).reset_index(drop=True), warnings
 
 
 # ============================================================
-# LOAD QUESTION DATABASE
+# DATA SOURCE
 # ============================================================
 
 st.sidebar.header("📂 Question Database")
@@ -332,10 +338,7 @@ st.sidebar.header("📂 Question Database")
 uploaded_file = st.sidebar.file_uploader(
     "Upload a CSV file",
     type=["csv"],
-    help=(
-        "Upload botanical_terms.csv. "
-        "The category column is optional."
-    ),
+    help="Upload botanical_terms.csv.",
 )
 
 try:
@@ -346,44 +349,56 @@ try:
             raise ValueError("The uploaded CSV file is empty.")
 
         source_df = parse_csv_text(decode_csv(raw_bytes))
+
     else:
-        source_df = load_csv_file(DEFAULT_CSV)
+        if not DEFAULT_CSV.exists():
+            st.error(
+                "botanical_terms.csv was not found. "
+                "Upload your CSV using the sidebar."
+            )
+
+            st.stop()
+
+        source_df = parse_csv_text(
+            decode_csv(DEFAULT_CSV.read_bytes())
+        )
 
     df, validation_warnings = validate_questions(source_df)
 
-except (ValueError, FileNotFoundError) as exc:
+except (ValueError, OSError) as exc:
     st.error(f"Could not load the question database: {exc}")
 
     st.info(
-        "Upload a valid CSV using the sidebar, or place "
-        "botanical_terms.csv next to streamlit_app.py."
+        "Check the CSV column names, quotation marks, answers, "
+        "and answer choices. You can upload a corrected CSV "
+        "using the sidebar."
     )
 
     st.stop()
 
 except Exception as exc:
     st.error("An unexpected error occurred while loading the CSV.")
-    st.caption(f"Technical details: {type(exc).__name__}: {exc}")
+    st.caption(f"Details: {type(exc).__name__}: {exc}")
     st.stop()
 
 
 if validation_warnings:
     with st.expander(
-        f"⚠️ {len(validation_warnings)} invalid question(s) skipped"
+        f"⚠️ {len(validation_warnings)} invalid question(s)"
     ):
         for warning in validation_warnings:
             st.warning(warning)
 
 
 # ============================================================
-# SIDEBAR: QUIZ SETTINGS
+# QUIZ SETTINGS
 # ============================================================
 
 st.sidebar.divider()
 st.sidebar.header("🎯 Quiz Settings")
 
 categories = sorted(
-    df["category"].dropna().unique().tolist(),
+    df["category"].unique().tolist(),
     key=str.casefold,
 )
 
@@ -391,7 +406,6 @@ selected_categories = st.sidebar.multiselect(
     "Choose categories",
     options=categories,
     default=categories,
-    help="Choose one or more categories for your quiz.",
 )
 
 available_df = df[
@@ -400,12 +414,7 @@ available_df = df[
 
 max_questions = len(available_df)
 
-st.sidebar.metric(
-    "Available questions",
-    max_questions,
-)
-
-if max_questions > 0:
+if max_questions:
     number_of_questions = st.sidebar.number_input(
         "Number of questions",
         min_value=1,
@@ -415,10 +424,7 @@ if max_questions > 0:
     )
 else:
     number_of_questions = 0
-
-    st.sidebar.warning(
-        "Select at least one category containing valid questions."
-    )
+    st.sidebar.warning("Select a category containing valid questions.")
 
 shuffle_questions = st.sidebar.checkbox(
     "Shuffle questions",
@@ -435,18 +441,16 @@ show_progress = st.sidebar.checkbox(
     value=True,
 )
 
-st.sidebar.divider()
-
 start_clicked = st.sidebar.button(
     "🚀 Start / Restart Quiz",
     type="primary",
     use_container_width=True,
-    disabled=(number_of_questions == 0),
+    disabled=number_of_questions == 0,
 )
 
 
 # ============================================================
-# START OR RESTART QUIZ
+# START OR RESTART
 # ============================================================
 
 if start_clicked:
@@ -469,12 +473,9 @@ if start_clicked:
 
     st.session_state.quiz_questions = questions
     st.session_state.quiz_started = True
-
     st.session_state.quiz_config = {
         "categories": list(selected_categories),
         "number_of_questions": int(number_of_questions),
-        "shuffle_questions": shuffle_questions,
-        "shuffle_options": shuffle_options,
     }
 
     st.rerun()
@@ -488,42 +489,35 @@ if not st.session_state.quiz_started:
     st.subheader("Welcome to the Botanical Latin Quiz! 🌱")
 
     st.write(
-        "Test your knowledge of botanical Latin terminology, "
-        "plant morphology, colors, and scientific plant names."
+        "Learn botanical Latin through questions about plant "
+        "morphology, colours, surface characteristics, and "
+        "scientific plant names."
     )
 
     col1, col2, col3 = st.columns(3)
 
-    with col1:
-        st.metric("Valid questions", len(df))
-
-    with col2:
-        st.metric("Categories", df["category"].nunique())
-
-    with col3:
-        st.metric("Selected questions", int(number_of_questions))
+    col1.metric("Valid questions", len(df))
+    col2.metric("Categories", df["category"].nunique())
+    col3.metric("Available questions", max_questions)
 
     st.markdown("### How to play")
 
     st.markdown(
         """
-        1. Choose one or more categories in the sidebar.
+        1. Choose categories in the sidebar.
         2. Select the number of questions.
         3. Click **Start / Restart Quiz**.
         4. Select an answer and submit it.
-        5. Read the explanation and continue.
-        6. Review your results at the end.
+        5. Read the explanation.
+        6. Review your final score.
         """
     )
 
     st.markdown("### Available categories")
 
     for category in categories:
-        category_count = int(
-            (df["category"] == category).sum()
-        )
-
-        st.write(f"- **{category}**: {category_count} questions")
+        count = int((df["category"] == category).sum())
+        st.write(f"- **{category}**: {count} questions")
 
     st.stop()
 
@@ -536,7 +530,7 @@ questions = st.session_state.quiz_questions
 total_questions = len(questions)
 
 if total_questions == 0:
-    st.error("No questions are available for this quiz.")
+    st.error("No questions are available.")
 
     if st.button("Return to setup"):
         reset_quiz()
@@ -557,39 +551,25 @@ if st.session_state.quiz_finished:
         1,
     )
 
+    st.balloons()
     st.success("🎉 Quiz completed!")
 
     st.subheader("Your Results")
 
     col1, col2, col3 = st.columns(3)
 
-    with col1:
-        st.metric(
-            "Correct answers",
-            f"{score}/{total_questions}",
-        )
-
-    with col2:
-        st.metric(
-            "Accuracy",
-            f"{percentage}%",
-        )
-
-    with col3:
-        st.metric(
-            "Incorrect answers",
-            total_questions - score,
-        )
+    col1.metric("Correct answers", f"{score}/{total_questions}")
+    col2.metric("Accuracy", f"{percentage}%")
+    col3.metric("Incorrect answers", total_questions - score)
 
     if percentage == 100:
-        st.balloons()
-        st.markdown("### 🌟 Perfect score! Excellent work!")
+        st.markdown("### 🌟 Perfect score!")
     elif percentage >= 80:
         st.markdown("### 🌿 Excellent work!")
     elif percentage >= 60:
-        st.markdown("### 🌱 Good progress! Keep learning.")
+        st.markdown("### 🌱 Good progress!")
     else:
-        st.markdown("### 📚 Keep practicing. You'll improve!")
+        st.markdown("### 📚 Keep practicing!")
 
     st.divider()
     st.subheader("📋 Answer Review")
@@ -604,26 +584,33 @@ if st.session_state.quiz_finished:
             f"{icon} Question {index}: {result['latin']}"
         ):
             st.write(f"**Category:** {result['category']}")
-
             st.write(
                 f"**Your answer:** "
                 f"{result['selected_answer'] or 'No answer'}"
             )
-
             st.write(f"**Correct answer:** {result['answer']}")
 
             if result["plant"]:
-                st.write(
-                    f"**Scientific name:** {result['plant']}"
-                )
+                st.write(f"**Scientific name:** {result['plant']}")
 
             if result["plant_name"]:
-                st.write(
-                    f"**Common name:** {result['plant_name']}"
-                )
+                st.write(f"**Common name:** {result['plant_name']}")
 
             if result["explanation"]:
                 st.info(result["explanation"])
+
+    # Download the user's results.
+    results_csv = pd.DataFrame(
+        st.session_state.question_results
+    ).to_csv(index=False).encode("utf-8-sig")
+
+    st.download_button(
+        "⬇️ Download Results",
+        data=results_csv,
+        file_name="botanical_latin_results.csv",
+        mime="text/csv",
+        use_container_width=True,
+    )
 
     if st.button(
         "🔄 Play Again",
@@ -650,26 +637,17 @@ st.subheader(
 )
 
 if show_progress:
-    progress = (question_index + 1) / total_questions
-
     st.progress(
-        progress,
+        (question_index + 1) / total_questions,
         text=f"Question {question_index + 1} of {total_questions}",
     )
 
 col1, col2 = st.columns(2)
 
-with col1:
-    st.metric(
-        "Current score",
-        st.session_state.score,
-    )
-
-with col2:
-    st.caption(f"Category: {question['category']}")
+col1.metric("Current score", st.session_state.score)
+col2.caption(f"Category: {question['category']}")
 
 st.markdown("### What does this botanical Latin term mean?")
-
 st.markdown(f"# 🌿 {question['latin']}")
 
 if question["plant"]:
@@ -700,7 +678,7 @@ if not st.session_state.answered:
 
     if submitted:
         if selected_answer is None:
-            st.warning("Please select an answer before submitting.")
+            st.warning("Please select an answer.")
         else:
             is_correct = (
                 selected_answer.casefold()
@@ -730,7 +708,7 @@ if not st.session_state.answered:
 
 
 # ============================================================
-# ANSWER FEEDBACK
+# FEEDBACK AND NAVIGATION
 # ============================================================
 
 else:
@@ -760,15 +738,10 @@ else:
 
     if question["plant"]:
         st.markdown("### 🌱 Example Plant")
-
-        st.write(
-            f"**Scientific name:** {question['plant']}"
-        )
+        st.write(f"**Scientific name:** {question['plant']}")
 
         if question["plant_name"]:
-            st.write(
-                f"**Common name:** {question['plant_name']}"
-            )
+            st.write(f"**Common name:** {question['plant_name']}")
 
     st.divider()
 
@@ -781,9 +754,7 @@ else:
             st.session_state.current_question += 1
             st.session_state.answered = False
             st.session_state.selected_answer = None
-
             st.rerun()
-
     else:
         if st.button(
             "🏁 Finish Quiz",
@@ -801,6 +772,6 @@ else:
 st.divider()
 
 st.caption(
-    "🌿 Botanical Latin Quiz | Learn botanical terminology "
-    "one question at a time."
+    "🌿 Botanical Latin Quiz | "
+    "Learn botanical terminology one question at a time."
 )
