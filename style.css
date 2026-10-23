@@ -1,315 +1,83 @@
-
-/* =========================================
-   GENEL AYARLAR
-   ========================================= */
-
-/* Açık tema */
+/* Genel sayfa */
 .stApp {
-    background-color: #F8FAFC;
-    color: #1E293B;
-}
-
-.main .block-container {
-    padding-top: 2rem;
-    padding-bottom: 3rem;
-    max-width: 1200px;
+    background-color: #101827;
+    color: #F9FAFB;
 }
 
 /* Başlıklar */
-h1, h2, h3, h4 {
-    color: #123047 !important;
-    font-weight: 700 !important;
+h1, h2, h3 {
+    color: #FFFFFF !important;
 }
 
-/* Genel metinler */
-.stApp p,
-.stApp li,
-.stApp label {
-    color: #263746;
+/* Normal metinler */
+p, label, li {
+    color: #F3F4F6;
 }
 
-
-/* =========================================
-   DETAYLI AÇIKLAMA KARTI
-   ========================================= */
-
+/* Açıklama kartı */
 .detail-card {
-    background-color: #FFFFFF;
-    color: #1E293B;
-    border: 1px solid #CBD5E1;
-    border-left: 6px solid #15803D;
-    border-radius: 12px;
-    padding: 22px;
-    margin: 15px 0;
-    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.08);
+    background-color: #1E293B;
+    color: #F9FAFB;
+    border: 1px solid #475569;
+    border-left: 5px solid #22C55E;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 12px 0;
 }
 
-.detail-card h3 {
-    color: #166534 !important;
-    margin-top: 0;
-}
-
-.detail-card p {
-    color: #1E293B !important;
+/* Kart içindeki tüm metinler */
+.detail-card p,
+.detail-card div {
+    color: #F9FAFB !important;
     font-size: 16px;
     line-height: 1.8;
 }
 
-.detail-card strong {
-    color: #123047 !important;
-}
-
+/* Bitki adı */
 .plant-name {
-    color: #166534 !important;
-    font-weight: 700;
+    color: #86EFAC !important;
+    font-weight: bold;
 }
 
-
-/* =========================================
-   ARAMA VE METİN GİRİŞ ALANLARI
-   ========================================= */
-
-.stTextInput input,
-.stTextArea textarea {
-    background-color: #FFFFFF !important;
-    color: #111827 !important;
-    border: 1px solid #64748B !important;
-    border-radius: 8px;
-    caret-color: #111827 !important;
-}
-
-.stTextInput input::placeholder,
-.stTextArea textarea::placeholder {
-    color: #64748B !important;
-    opacity: 1 !important;
-}
-
-
-/* =========================================
-   SEÇİM KUTULARI
-   ========================================= */
-
-[data-baseweb="select"] > div {
-    background-color: #FFFFFF !important;
-    color: #111827 !important;
-    border-color: #64748B !important;
-}
-
-[data-baseweb="select"] input {
-    color: #111827 !important;
-}
-
-[data-baseweb="popover"] {
-    background-color: #FFFFFF !important;
-}
-
-[data-baseweb="menu"] {
-    background-color: #FFFFFF !important;
-}
-
-[role="option"] {
-    background-color: #FFFFFF !important;
-    color: #111827 !important;
-}
-
-[role="option"]:hover {
-    background-color: #DBEAFE !important;
-    color: #111827 !important;
-}
-
-
-/* =========================================
-   TABLO
-   ========================================= */
-
+/* Veri tablosu */
 [data-testid="stDataFrame"] {
-    border: 1px solid #CBD5E1;
+    border: 1px solid #475569;
     border-radius: 8px;
-    overflow: hidden;
 }
 
-/* Tablodaki yazıların seçilebilir olmasını sağla */
-[data-testid="stDataFrame"] * {
-    color: inherit;
-}
-
-
-/* =========================================
-   BUTONLAR
-   ========================================= */
-
-.stButton > button {
-    background-color: #166534 !important;
+/* Giriş alanları */
+input, textarea {
+    background-color: #1E293B !important;
     color: #FFFFFF !important;
-    border: 1px solid #166534 !important;
+}
+
+/* Butonlar */
+.stButton > button {
+    background-color: #15803D !important;
+    color: #FFFFFF !important;
+    border: none;
     border-radius: 8px;
-    padding: 8px 18px;
-    font-weight: 600;
+    padding: 8px 16px;
 }
 
 .stButton > button:hover {
-    background-color: #14532D !important;
-    color: #FFFFFF !important;
-    border-color: #14532D !important;
+    background-color: #166534 !important;
 }
 
-
-/* =========================================
-   BİLGİ KUTULARI
-   ========================================= */
-
-[data-testid="stAlert"] {
-    background-color: #EFF6FF;
-    color: #1E3A8A;
-    border-radius: 8px;
-}
-
-[data-testid="stAlert"] p {
-    color: #1E3A8A !important;
-}
-
-
-/* =========================================
-   DARK TEMA
-   ========================================= */
-
-/* Streamlit koyu tema değişkeni */
-.stApp[data-theme="dark"],
-[data-theme="dark"] .stApp {
-    background-color: #0E1117 !important;
-    color: #F1F5F9 !important;
-}
-
-/* Koyu temada başlıklar */
-[data-theme="dark"] h1,
-[data-theme="dark"] h2,
-[data-theme="dark"] h3,
-[data-theme="dark"] h4 {
-    color: #F8FAFC !important;
-}
-
-/* Koyu temada genel metinler */
-[data-theme="dark"] .stApp p,
-[data-theme="dark"] .stApp li,
-[data-theme="dark"] .stApp label,
-[data-theme="dark"] .stApp span {
-    color: #E2E8F0;
-}
-
-/* Koyu temada detay kartı */
-[data-theme="dark"] .detail-card {
-    background-color: #1E293B !important;
-    color: #F1F5F9 !important;
-    border: 1px solid #475569 !important;
-    border-left: 6px solid #4ADE80 !important;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
-}
-
-/* Koyu temada açıklama başlığı */
-[data-theme="dark"] .detail-card h3 {
-    color: #86EFAC !important;
-}
-
-/* Koyu temada açıklama metni */
-[data-theme="dark"] .detail-card p {
-    color: #F1F5F9 !important;
-}
-
-/* Koyu temada kalın metinler */
-[data-theme="dark"] .detail-card strong {
-    color: #FFFFFF !important;
-}
-
-/* Koyu temada bitki adı */
-[data-theme="dark"] .plant-name {
-    color: #86EFAC !important;
-}
-
-/* Koyu temada arama alanları */
-[data-theme="dark"] .stTextInput input,
-[data-theme="dark"] .stTextArea textarea {
-    background-color: #1E293B !important;
-    color: #FFFFFF !important;
-    border: 1px solid #64748B !important;
-    caret-color: #FFFFFF !important;
-}
-
-[data-theme="dark"] .stTextInput input::placeholder,
-[data-theme="dark"] .stTextArea textarea::placeholder {
-    color: #CBD5E1 !important;
-    opacity: 1 !important;
-}
-
-/* Koyu temada seçim kutuları */
-[data-theme="dark"] [data-baseweb="select"] > div {
+/* Seçim kutuları */
+[data-baseweb="select"] > div {
     background-color: #1E293B !important;
     color: #FFFFFF !important;
     border-color: #64748B !important;
 }
 
-[data-theme="dark"] [data-baseweb="select"] input {
-    color: #FFFFFF !important;
-}
-
-/* Koyu temada açılır menüler */
-[data-theme="dark"] [data-baseweb="popover"],
-[data-theme="dark"] [data-baseweb="menu"] {
-    background-color: #1E293B !important;
-}
-
-[data-theme="dark"] [role="option"] {
-    background-color: #1E293B !important;
-    color: #F8FAFC !important;
-}
-
-[data-theme="dark"] [role="option"]:hover {
-    background-color: #334155 !important;
-    color: #FFFFFF !important;
-}
-
-/* Koyu temada tablo çerçevesi */
-[data-theme="dark"] [data-testid="stDataFrame"] {
-    border: 1px solid #475569;
-}
-
-/* Koyu temada bilgi kutuları */
-[data-theme="dark"] [data-testid="stAlert"] {
-    background-color: #172554 !important;
-    border: 1px solid #3B82F6;
-}
-
-[data-theme="dark"] [data-testid="stAlert"] p {
-    color: #DBEAFE !important;
-}
-
-/* Koyu temada butonlar */
-[data-theme="dark"] .stButton > button {
-    background-color: #166534 !important;
-    color: #FFFFFF !important;
-    border-color: #4ADE80 !important;
-}
-
-[data-theme="dark"] .stButton > button:hover {
-    background-color: #15803D !important;
-    color: #FFFFFF !important;
-}
-
-
-/* =========================================
-   MOBİL UYUMLULUK
-   ========================================= */
-
+/* Mobil görünüm */
 @media (max-width: 768px) {
     .main .block-container {
         padding: 1rem;
     }
 
     .detail-card {
-        padding: 16px;
-    }
-
-    .detail-card p {
-        font-size: 15px;
-        line-height: 1.8;
+        padding: 14px;
     }
 }
