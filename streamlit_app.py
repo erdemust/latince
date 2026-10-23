@@ -438,49 +438,7 @@ def safe_text(value):
     """HTML içeriği olarak yorumlanmasını önler."""
     return html.escape(str(value))
 
-
-# ==================================================
-# 11. DETAY KARTI
-# ==================================================
-
-st.markdown(
-    f"""
-    <div class="detail-card">
-        <h2>🌱 {safe_text(row["latin"])}</h2>
-
-        <p>
-            <strong>Anlamı:</strong><br>
-            {safe_text(row["answer"])}
-        </p>
-
-        <p>
-            <strong>Örnek Bitki:</strong><br>
-            <span class="plant-name">
-                {safe_text(row["plant"])}
-            </span>
-            <br>
-            {safe_text(row["plant_name"])}
-        </p>
-
-        <hr>
-
-        <p>
-            <strong>📖 Açıklama</strong><br><br>
-            {safe_text(row["explanation"])}
-        </p>
-    </div>
-    """,
-    unsafe_allow_html=True,
-)
-
-
-# ==================================================
-# 12. SEÇENEKLER
-# ==================================================
-
-st.subheader("📝 Terim Seçenekleri")
-
-options_text = row["options"]
-
-if options_text:
-    # Virg
+File "/mount/src/latince/streamlit_app.py", line 486
+      # Virg
+            ^
+IndentationError: expected an indented block after 'if' statement on line 485
