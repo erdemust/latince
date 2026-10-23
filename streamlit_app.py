@@ -409,36 +409,137 @@ if show_table:
         mime="text/csv",
     )
 
-
-# ==================================================
-# 10. TERİM SEÇİMİ
-# ==================================================
-
-st.divider()
-
-st.subheader("📚 Detaylı Açıklama")
-
-selected_term = st.selectbox(
-    "İncelemek istediğiniz terimi seçin:",
-    options=filtered_df["latin"].tolist(),
-)
-
-matches = filtered_df[
-    filtered_df["latin"] == selected_term
-]
-
-if matches.empty:
-    st.warning("Seçilen terim bulunamadı.")
-    st.stop()
-
-row = matches.iloc[0]
-
-
 def safe_text(value):
     """HTML içeriği olarak yorumlanmasını önler."""
     return html.escape(str(value))
 
-File "/mount/src/latince/streamlit_app.py", line 486
-      # Virg
-            ^
-IndentationError: expected an indented block after 'if' statement on line 485
+
+# ==================================================
+# 11. DETAYLI AÇIKLAMA KARTI
+# ==================================================
+
+latin = safe_text(row["latin"])
+answer = safe_text(row["answer"])
+plant = safe_text(row["plant"])
+plant_name = safe_text(row["plant_name"])
+explanation = safe_text(row["explanation"])
+
+st.markdown(
+    f"""
+    <div style="
+        background-color: #1E293B;
+        color: #FFFFFF;
+        border: 1px solid #475569;
+        border-left: 6px solid #22C55E;
+        border-radius: 12px;
+        padding: 24px;
+        margin-top: 15px;
+    ">
+        <h2 style="
+            color: #86EFAC;
+            margin-top: 0;
+        ">
+            🌱 {latin}
+        </h2>
+
+        <p style="
+            color: #FFFFFF;
+            font-size: 18px;
+            line-height: 1.7;
+        ">
+            <strong style="color: #93C5FD;">
+                Anlamı:
+            </strong>
+            {answer}
+        </p>
+
+        <p style="
+            color: #FFFFFF;
+            font-size: 18px;
+            line-height: 1.7;
+        ">
+            <strong style="color: #93C5FD;">
+                Örnek Bitki:
+            </strong>
+            <span style="
+                color: #86EFAC;
+                font-weight: bold;
+            ">
+                {plant}
+            </span>
+            — {plant_name}
+        </p>
+
+        <hr style="border-color: #475569;">
+
+        <h3 style="color: #7DD3FC;">
+            📖 Açıklama
+        </h3>
+
+        <p style="
+            color: #F8FAFC;
+            font-size: 17px;
+            line-height: 1.9;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        ">
+            {explanation}
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# ==================================================
+# 12. SEÇENEKLER
+# ==================================================
+
+st.subheader("📝 Terim Bilgileri")
+
+options_text = str(row["options"]).strip()
+
+if options_text:
+    # Seçenekler virgül veya | işaretiyle ayrılmış olabilir.
+    if "|" in options_text:
+        options_list = [
+            item.strip()
+            for item in options_text.split("|")
+            if item.strip()
+        ]
+    else:
+        options_list = [
+            item.strip()
+            for item in options_text.split(",")
+            if item.strip()
+        ]
+
+    st.markdown(
+        """
+        <div style="
+            background-color: #1E293B;
+            color: #FFFFFF;
+            border: 1px solid #475569;
+            border-radius: 10px;
+            padding: 18px;
+        ">
+            <h4 style="color: #86EFAC; margin-top: 0;">
+                Cevap seçenekleri
+            </h4>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    for index, option in enumerate(options_list, start=1):
+        if option == str(row["answer"]).strip():
+            st.success(f"✅ {index}. {option}")
+        else:
+            st.write(f"• {option}")
+
+st.divider()
+
+st.caption(
+    "🌿 Latince Botanik Terimleri | "
+    "Botanik terimlerini keşfetmeye devam edin."
+)
