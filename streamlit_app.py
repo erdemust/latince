@@ -123,7 +123,7 @@ st.markdown(
 
 
 # ============================================================
-# 3. SORU HAVUZU
+# 3. SORU HAVUZU (50+ Genişletilmiş Botanik Renk ve Terimler)
 # ============================================================
 
 RAW_QUESTIONS = [
@@ -311,7 +311,7 @@ RAW_QUESTIONS = [
         "'Lilacinus' leylak rengi veya açık mor tonlarını anlatır.",
     ),
 
-    # --- Genişletilmiş Yeni Sorular ---
+    # --- Genişletilmiş Ek Sorular (50+ Tamamlama) ---
     (
         "Atropurpureus",
         "Çok koyu mor",
@@ -569,6 +569,7 @@ RAW_QUESTIONS = [
         "'Subviridis' yeşilimsi anlamına gelir.",
     ),
 ]
+
 
 def build_question_pool():
     """Soru verilerini kontrol eder ve standart biçime dönüştürür."""
@@ -858,7 +859,8 @@ def render_register():
             max_chars=50,
         )
 
-        count_options = [5, 10, 15, 20]
+        # 50 soruluk seçenek eklendi
+        count_options = [5, 10, 15, 20, 50]
         selected_count = st.selectbox(
             "Soru sayısı",
             count_options,
