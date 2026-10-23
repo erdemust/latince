@@ -1,622 +1,694 @@
 import random
 import time
+import html
+import uuid
+
 import pandas as pd
 import streamlit as st
 
-# ==========================================
-# SAYFA YAPILANDIRMASI VE ÖZEL CSS TASARIMI
-# ==========================================
+
+# ============================================================
+# 1. SAYFA AYARLARI
+# ============================================================
+
 st.set_page_config(
-    page_title="Latince Botanik Renkleri Quiz",
+    page_title="Botanica | Latince Renkler",
     page_icon="🌿",
     layout="centered",
+    initial_sidebar_state="collapsed",
 )
+
+
+# ============================================================
+# 2. TASARIM SİSTEMİ
+# Streamlit'in yerleşik tema değişkenlerini kullanır.
+# Açık ve koyu temalarda arka plan ve metin renkleri uyumludur.
+# ============================================================
 
 st.markdown(
     """
     <style>
-    .main {
-        background-color: #f8fafc;
+    :root {
+        --botanica-radius: 18px;
+        --botanica-radius-small: 12px;
+        --botanica-transition: 180ms ease;
     }
-    .stButton>button {
+
+    .stApp {
+        background: var(--background-color);
+        color: var(--text-color);
+    }
+
+    .block-container {
+        max-width: 900px;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
+
+    h1, h2, h3, p, label {
+        color: var(--text-color);
+    }
+
+    h1 {
+        font-weight: 800 !important;
+        letter-spacing: -0.04em;
+    }
+
+    h2, h3 {
+        letter-spacing: -0.025em;
+    }
+
+    /* Ana başlık */
+
+    .hero-card {
+        padding: 1.7rem;
+        margin-bottom: 1.4rem;
+        border-radius: var(--botanica-radius);
+        border: 1px solid var(--border-color, rgba(128,128,128,.22));
+        background:
+            linear-gradient(
+                135deg,
+                var(--secondary-background-color),
+                var(--background-color)
+            );
+        box-shadow: 0 8px 30px rgba(80, 100, 80, 0.07);
+    }
+
+    .hero-eyebrow {
+        font-size: .78rem;
+        font-weight: 800;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+        color: var(--primary-color);
+        margin-bottom: .6rem;
+    }
+
+    .hero-title {
+        font-size: clamp(1.8rem, 5vw, 2.8rem);
+        line-height: 1.15;
+        font-weight: 850;
+        letter-spacing: -.045em;
+        margin: 0 0 .7rem 0;
+        color: var(--text-color);
+    }
+
+    .hero-description {
+        color: var(--text-color);
+        opacity: .78;
+        font-size: 1rem;
+        line-height: 1.7;
+        margin: 0;
+    }
+
+    /* Bilgi kartları */
+
+    .info-card {
+        height: 100%;
+        padding: 1rem 1.1rem;
+        border-radius: var(--botanica-radius-small);
+        border: 1px solid var(--border-color, rgba(128,128,128,.22));
+        background: var(--secondary-background-color);
+        transition:
+            transform var(--botanica-transition),
+            box-shadow var(--botanica-transition);
+    }
+
+    .info-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 7px 20px rgba(80, 100, 80, 0.08);
+    }
+
+    .info-label {
+        font-size: .78rem;
+        opacity: .72;
+        margin-bottom: .45rem;
+    }
+
+    .info-value {
+        font-size: 1.4rem;
+        line-height: 1.35;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+        color: var(--text-color);
+    }
+
+    /* Soru kartı */
+
+    .question-card {
+        padding: clamp(1.1rem, 4vw, 2rem);
+        margin: 1rem 0;
+        border-radius: var(--botanica-radius);
+        border: 1px solid var(--border-color, rgba(128,128,128,.22));
+        background: var(--secondary-background-color);
+        box-shadow: 0 10px 30px rgba(80, 100, 80, 0.06);
+    }
+
+    .question-label {
+        font-size: .76rem;
+        font-weight: 800;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        color: var(--primary-color);
+        margin-bottom: .6rem;
+    }
+
+    .latin-term {
+        font-size: clamp(2rem, 7vw, 3.3rem);
+        line-height: 1.15;
+        font-weight: 850;
+        font-style: italic;
+        letter-spacing: -.04em;
+        overflow-wrap: anywhere;
+        margin: .2rem 0 .8rem;
+        color: var(--text-color);
+    }
+
+    .question-text {
+        font-size: 1.05rem;
+        line-height: 1.65;
+        color: var(--text-color);
+        opacity: .9;
+    }
+
+    /* Cevap seçenekleri */
+
+    .stButton > button {
         width: 100%;
-        border-radius: 8px;
-        font-weight: 600;
-        padding: 0.6rem 1rem;
-        transition: all 0.2s ease-in-out;
-    }
-    .stButton>button:hover {
-        border-color: #2e7d32;
-        color: #2e7d32;
-    }
-    .card-box {
-        background-color: #ffffff;
-        padding: 24px;
+        min-height: 48px;
         border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        margin-bottom: 20px;
+        font-weight: 650;
+        transition:
+            transform var(--botanica-transition),
+            box-shadow var(--botanica-transition);
     }
-    h1, h2, h3 {
-        color: #1e293b;
+
+    .stButton > button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 5px 15px rgba(80, 100, 80, 0.10);
+    }
+
+    .answer-card {
+        padding: .85rem 1rem;
+        margin: .45rem 0;
+        border: 1px solid var(--border-color, rgba(128,128,128,.22));
+        border-radius: var(--botanica-radius-small);
+        background: var(--secondary-background-color);
+        color: var(--text-color);
+        overflow-wrap: anywhere;
+    }
+
+    .answer-correct {
+        background: rgba(34, 197, 94, .13);
+        border: 1px solid rgba(34, 197, 94, .7);
+    }
+
+    .answer-wrong {
+        background: rgba(239, 68, 68, .12);
+        border: 1px solid rgba(239, 68, 68, .7);
+    }
+
+    .answer-neutral {
+        background: var(--secondary-background-color);
+    }
+
+    .answer-icon {
+        display: inline-block;
+        width: 1.7rem;
+        font-weight: 800;
+    }
+
+    /* Botanik bilgi kartı */
+
+    .plant-card {
+        padding: 1.15rem;
+        border-radius: var(--botanica-radius-small);
+        border: 1px solid var(--border-color, rgba(128,128,128,.22));
+        background: var(--secondary-background-color);
+        margin: .8rem 0;
+    }
+
+    .plant-name {
+        font-size: 1.2rem;
+        font-weight: 800;
+        margin: .25rem 0;
+        color: var(--text-color);
+    }
+
+    .plant-description {
+        line-height: 1.65;
+        opacity: .82;
+        color: var(--text-color);
+    }
+
+    /* Sonuç kartı */
+
+    .result-banner {
+        padding: 1.4rem;
+        border-radius: var(--botanica-radius);
+        background: var(--secondary-background-color);
+        border: 1px solid var(--border-color, rgba(128,128,128,.22));
+        margin: 1rem 0;
+    }
+
+    .result-score {
+        font-size: clamp(2.5rem, 8vw, 4rem);
+        font-weight: 900;
+        letter-spacing: -.05em;
+        line-height: 1.1;
+        color: var(--primary-color);
+    }
+
+    /* Genel yardımcı sınıflar */
+
+    .muted-text {
+        opacity: .7;
+        font-size: .88rem;
+        line-height: 1.6;
+    }
+
+    .section-heading {
+        margin-top: 1.6rem;
+        margin-bottom: .7rem;
+        font-weight: 800;
+    }
+
+    div[data-testid="stProgress"] > div > div {
+        background-color: var(--primary-color);
+        border-radius: 999px;
+    }
+
+    div[data-testid="stProgress"] {
+        margin: .7rem 0 1rem;
+    }
+
+    @media (max-width: 640px) {
+        .block-container {
+            padding: 1rem .8rem 2rem;
+        }
+
+        .hero-card {
+            padding: 1.2rem;
+        }
+
+        .question-card {
+            padding: 1rem;
+        }
+
+        .info-value {
+            font-size: 1.15rem;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            transition: none !important;
+            animation: none !important;
+        }
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# ==========================================
-# DOĞRULANMIŞ VE ZENGİNLEŞTİRİLMİŞ SORU HAVUZU
-# ==========================================
-QUESTIONS = [
-    {
-        "latin": "Albus",
-        "question": "'Albus' hangi rengi ifade eder?",
-        "options": ["Siyah", "Beyaz", "Kırmızı", "Sarı"],
-        "answer": "Beyaz",
-        "plant": "Nymphaea alba",
-        "plant_name": "Beyaz Nilüfer",
-        "explanation": "'Alba', saf beyaz çiçekleri ve yapıları tanımlamak için kullanılır.",
-    },
-    {
-        "latin": "Niger",
-        "question": "'Niger' hangi rengi ifade eder?",
-        "options": ["Yeşil", "Mavi", "Siyah", "Pembe"],
-        "answer": "Siyah",
-        "plant": "Sambucus nigra",
-        "plant_name": "Kara Mürver",
-        "explanation": "'Nigra', siyah veya çok koyu renkli meyve ve gövdeleri belirtir.",
-    },
-    {
-        "latin": "Ruber",
-        "question": "'Ruber' hangi rengi ifade eder?",
-        "options": ["Kırmızı", "Mor", "Gri", "Beyaz"],
-        "answer": "Kırmızı",
-        "plant": "Acer rubrum",
-        "plant_name": "Kırmızı Akçaağaç",
-        "explanation": "'Rubrum', sonbaharda kızaran yaprakları ve kırmızı çiçekleri niteler.",
-    },
-    {
-        "latin": "Roseus",
-        "question": "'Roseus' hangi rengi ifade eder?",
-        "options": ["Turuncu", "Kahverengi", "Sarı", "Pembe"],
-        "answer": "Pembe",
-        "plant": "Catharanthus roseus",
-        "plant_name": "Pembe Cezayir Menekşesi",
-        "explanation": "'Roseus', gül pembesi tonlarındaki çiçekleri tanımlar.",
-    },
-    {
-        "latin": "Purpureus",
-        "question": "'Purpureus' hangi rengi ifade eder?",
-        "options": ["Mavi", "Mor", "Yeşil", "Gümüş"],
-        "answer": "Mor",
-        "plant": "Echinacea purpurea",
-        "plant_name": "Mor Ekinezya",
-        "explanation": "'Purpurea', erguvan ve mor tonlarındaki çiçek yapısını ifade eder.",
-    },
-    {
-        "latin": "Violaceus",
-        "question": "'Violaceus' hangi rengi ifade eder?",
-        "options": ["Kahverengi", "Sarı", "Menekşe moru", "Beyaz"],
-        "answer": "Menekşe moru",
-        "plant": "Viola odorata",
-        "plant_name": "Kokulu Menekşe",
-        "explanation": "'Violaceus', menekşe moru tonlarını ve renk geçişlerini belirtir.",
-    },
-    {
-        "latin": "Caeruleus",
-        "question": "'Caeruleus' hangi rengi ifade eder?",
-        "options": ["Gri", "Mavi", "Siyah", "Kırmızı"],
-        "answer": "Mavi",
-        "plant": "Ceratostigma plumbaginoides",
-        "plant_name": "Mavi Kurşun Otu",
-        "explanation": "'Caeruleus', gök mavisi ve canlı mavi tonları simgeler.",
-    },
-    {
-        "latin": "Flavus",
-        "question": "'Flavus' hangi rengi ifade eder?",
-        "options": ["Yeşil", "Mor", "Pembe", "Sarı"],
-        "answer": "Sarı",
-        "plant": "Rosa foetida",
-        "plant_name": "Yabani Sarı Gül",
-        "explanation": "'Flavus', bitkilerde saf sarı renk tonlarını ifade eder.",
-    },
-    {
-        "latin": "Luteus",
-        "question": "'Luteus' hangi rengi ifade eder?",
-        "options": ["Sarı", "Mavi", "Siyah", "Gri"],
-        "answer": "Sarı",
-        "plant": "Iris pseudacorus",
-        "plant_name": "Sarı Süsen",
-        "explanation": "'Luteus', altın sarısı ve sarı tonlardaki çiçekleri tanımlar.",
-    },
-    {
-        "latin": "Aureus",
-        "question": "'Aureus' hangi rengi ifade eder?",
-        "options": ["Gümüş", "Kahverengi", "Altın rengi", "Mor"],
-        "answer": "Altın rengi",
-        "plant": "Cytisus scoparius",
-        "plant_name": "Altın Sarısı Katırtırnağı",
-        "explanation": "'Aureus', parlak altın sarısı görünümü vurgular.",
-    },
-    {
-        "latin": "Viridis",
-        "question": "'Viridis' hangi rengi ifade eder?",
-        "options": ["Kırmızı", "Yeşil", "Pembe", "Turuncu"],
-        "answer": "Yeşil",
-        "plant": "Helleborus viridis",
-        "plant_name": "Yeşil Çöpleme",
-        "explanation": "'Viridis', yaprak ve gövdelerdeki yeşil rengi temsil eder.",
-    },
-    {
-        "latin": "Glaucus",
-        "question": "'Glaucus' bitki rengini tanımlarken ne anlama gelir?",
-        "options": ["Parlak sarı", "Koyu kırmızı", "Saf beyaz", "Mavimsi yeşil veya grimsi mavi"],
-        "answer": "Mavimsi yeşil veya grimsi mavi",
-        "plant": "Glaucium flavum",
-        "plant_name": "Boynuzlu Gelincik",
-        "explanation": "'Glaucus', mumsu veya puslu görünen mavimsi yeşil yaprakları tanımlar.",
-    },
-    {
-        "latin": "Cinereus",
-        "question": "'Cinereus' hangi renk tonunu ifade eder?",
-        "options": ["Kül grisi", "Altın sarısı", "Pembe", "Mor"],
-        "answer": "Kül grisi",
-        "plant": "Eucalyptus cinerea",
-        "plant_name": "Gümüş Dolar Okaliptüsü",
-        "explanation": "'Cinereus', kül grisi tonlardaki yaprak yüzeylerini belirtir.",
-    },
-    {
-        "latin": "Brunneus",
-        "question": "'Brunneus' hangi rengi ifade eder?",
-        "options": ["Beyaz", "Mavi", "Kahverengi", "Pembe"],
-        "answer": "Kahverengi",
-        "plant": "Castanea sativa",
-        "plant_name": "Anadolu Kestanesi",
-        "explanation": "'Brunneus', kahverengi gövde ve kabuk dokularını tanımlar.",
-    },
-    {
-        "latin": "Fuscus",
-        "question": "'Fuscus' hangi renk tonunu ifade eder?",
-        "options": ["Açık mavi", "Koyu kahverengi veya esmer", "Kar beyazı", "Parlak pembe"],
-        "answer": "Koyu kahverengi veya esmer",
-        "plant": "Carex fusca",
-        "plant_name": "Esmer Saz",
-        "explanation": "'Fuscus', koyu kahverengi ve esmer tonları ifade eden bir sıfattır.",
-    },
-    {
-        "latin": "Fulvus",
-        "question": "'Fulvus' hangi renk tonunu ifade eder?",
-        "options": ["Mavi", "Siyah", "Mor", "Sarımsı kahverengi"],
-        "answer": "Sarımsı kahverengi",
-        "plant": "Hemerocallis fulva",
-        "plant_name": "Sarımsı Kahverengi Zambak",
-        "explanation": "'Fulvus', toprak tonlarını andıran sarımsı kahverengi renkleri tanımlar.",
-    },
-    {
-        "latin": "Rufus",
-        "question": "'Rufus' hangi rengi ifade eder?",
-        "options": ["Kızıl veya kızıl kahverengi", "Yeşil", "Beyaz", "Gök mavisi"],
-        "answer": "Kızıl veya kızıl kahverengi",
-        "plant": "Lactarius rufus",
-        "plant_name": "Kızıl Mantar",
-        "explanation": "'Rufus', kızıl ile kızıl kahverengi arasındaki tonları belirtir.",
-    },
-    {
-        "latin": "Atropurpureus",
-        "question": "'Atropurpureus' hangi renk tonunu ifade eder?",
-        "options": ["Açık sarı", "Çok koyu mor", "Beyaz", "Gümüş"],
-        "answer": "Çok koyu mor",
-        "plant": "Acer palmatum 'Atropurpureum'",
-        "plant_name": "Mor Yapraklı Japon Akçaağacı",
-        "explanation": "'Atropurpureus', siyaha yakın çok koyu mor yapraklı formları niteler.",
-    },
-    {
-        "latin": "Pallidus",
-        "question": "'Pallidus' ne anlama gelir?",
-        "options": ["Çok parlak", "Koyu siyah", "Soluk veya açık renkli", "Altın rengi"],
-        "answer": "Soluk veya açık renkli",
-        "plant": "Iris pallida",
-        "plant_name": "Soluk Süsen",
-        "explanation": "'Pallidus', soluk renkli çiçek ve yaprak kısımlarını açıklar.",
-    },
-    {
-        "latin": "Argenteus",
-        "question": "'Argenteus' hangi rengi ifade eder?",
-        "options": ["Turuncu", "Kahverengi", "Kırmızı", "Gümüş rengi"],
-        "answer": "Gümüş rengi",
-        "plant": "Convolvulus cneorum",
-        "plant_name": "Gümüşi Çalı",
-        "explanation": "'Argenteus', parıltılı gümüşi yaprak tüylerini ifade eder.",
-    },
-    {
-        "latin": "Cupreus",
-        "question": "'Cupreus' hangi rengi ifade eder?",
-        "options": ["Bakır rengi", "Mavi", "Beyaz", "Pembe"],
-        "answer": "Bakır rengi",
-        "plant": "Carex buchananii",
-        "plant_name": "Bakırımsı Saz",
-        "explanation": "'Cupreus', bakırımsı kahverengi tonları simgeler.",
-    },
-    {
-        "latin": "Lilacinus",
-        "question": "'Lilacinus' hangi rengi ifade eder?",
-        "options": ["Yeşil", "Leylak rengi", "Siyah", "Sarı"],
-        "answer": "Leylak rengi",
-        "plant": "Syringa vulgaris",
-        "plant_name": "Adi Leylak",
-        "explanation": "'Lilacinus', leylak rengi ve açık mor çiçek kümelerini tanımlar.",
-    },
-    {
-        "latin": "Lacteus",
-        "question": "'Lacteus' hangi rengi ifade eder?",
-        "options": ["Koyu kahverengi", "Mor", "Süt beyazı", "Turuncu"],
-        "answer": "Süt beyazı",
-        "plant": "Euphorbia lactea",
-        "plant_name": "Süt Ağacı",
-        "explanation": "'Lacteus', süt gibi saf ve yumuşak beyaz renk tonlarını ifade eder.",
-    },
-    {
-        "latin": "Niveus",
-        "question": "'Niveus' hangi rengi ifade eder?",
-        "options": ["Kızıl", "Yeşil", "Mavi", "Kar beyazı"],
-        "answer": "Kar beyazı",
-        "plant": "Galanthus nivalis",
-        "plant_name": "Kardelen",
-        "explanation": "'Niveus', kar gibi parlak ve saf beyaz renk tonlarını tanımlar.",
-    },
-    {
-        "latin": "Bicolor",
-        "question": "'Bicolor' ne anlama gelir?",
-        "options": ["İki renkli", "Tek renkli", "Renksiz", "Kül grisi"],
-        "answer": "İki renkli",
-        "plant": "Viola tricolor",
-        "plant_name": "Hercai Menekşe",
-        "explanation": "'Bicolor', aynı yapıda iki farklı rengi barındıran türleri belirtir.",
-    },
-    {
-        "latin": "Tricolor",
-        "question": "'Tricolor' ne anlama gelir?",
-        "options": ["Siyah", "Üç renkli", "Altın sarısı", "Gri"],
-        "answer": "Üç renkli",
-        "plant": "Viola tricolor",
-        "plant_name": "Hercai Menekşe",
-        "explanation": "'Tricolor', çiçeklerinde üç ayrı rengi aynı anda taşıyan türleri ifade eder.",
-    },
-    {
-        "latin": "Versicolor",
-        "question": "'Versicolor' ne anlama gelir?",
-        "options": ["Beyaz", "Kırmızı", "Çok renkli veya renk değiştiren", "Koyu yeşil"],
-        "answer": "Çok renkli veya renk değiştiren",
-        "plant": "Iris versicolor",
-        "plant_name": "Çok Renkli Süsen",
-        "explanation": "'Versicolor', zamanla renk değiştiren veya çok renkli yapıları belirtir.",
-    },
-    {
-        "latin": "Coccineus",
-        "question": "'Coccineus' hangi rengi ifade eder?",
-        "options": ["Gri", "Parlak kırmızı", "Mavimsi yeşil", "Kahverengi"],
-        "answer": "Parlak kırmızı",
-        "plant": "Salvia coccinea",
-        "plant_name": "Kırmızı Çiçekli Adaçayı",
-        "explanation": "'Coccineus', göz alıcı canlı ve parlak kırmızı renk tonlarını ifade eder.",
-    },
-    {
-        "latin": "Sanguineus",
-        "question": "'Sanguineus' hangi rengi ifade eder?",
-        "options": ["Kan kırmızısı", "Soluk sarı", "Gümüş", "Yeşil"],
-        "answer": "Kan kırmızısı",
-        "plant": "Cornus sanguinea",
-        "plant_name": "Kızılcık",
-        "explanation": "'Sanguineus', derin kan kırmızısı renk tonlarını ve kabukları tanımlar.",
-    },
-    {
-        "latin": "Pallens",
-        "question": "'Pallens' hangi özelliği ifade eder?",
-        "options": ["Çok koyu", "Altın rengi", "Soluk veya solgun", "Bakır rengi"],
-        "answer": "Soluk veya solgun",
-        "plant": "Carex pallens",
-        "plant_name": "Soluk Saz",
-        "explanation": "'Pallens', rengi solmuş veya soluk görünümdeki bitki kısımlarını belirtir.",
-    },
-    {
-        "latin": "Rubescens",
-        "question": "'Rubescens' ne anlama gelir?",
-        "options": ["Yeşile dönen", "Kırmızılaşan", "Beyazlaşan", "Maviye dönen"],
-        "answer": "Kırmızılaşan",
-        "plant": "Geranium rubescens",
-        "plant_name": "Kızaran Turnagagası",
-        "explanation": "'Rubescens', zamanla kızaran veya kırmızıya dönen kısımları ifade eder.",
-    },
-    {
-        "latin": "Albicans",
-        "question": "'Albicans' hangi anlamı taşır?",
-        "options": ["Siyahımsı", "Sarımsı", "Beyazımsı", "Kızılımsı"],
-        "answer": "Beyazımsı",
-        "plant": "Quercus albicans",
-        "plant_name": "Beyazımsı Meşe",
-        "explanation": "'Albicans', beyaza çalan renk tonlarını ve tüylü yapıları niteler.",
-    },
-    {
-        "latin": "Flavescens",
-        "question": "'Flavescens' ne anlama gelir?",
-        "options": ["Mavileşen", "Kararan", "Morlaşan", "Sarılaşan"],
-        "answer": "Sarılaşan",
-        "plant": "Picea abies f. flavescens",
-        "plant_name": "Sarılaşan Ladin",
-        "explanation": "'Flavescens', sarıya dönen veya sarılaşmakta olan kısımları açıklar.",
-    },
-    {
-        "latin": "Viridescens",
-        "question": "'Viridescens' ne anlama gelir?",
-        "options": ["Yeşile dönen", "Kırmızılaşan", "Beyazlaşan", "Kararan"],
-        "answer": "Yeşile dönen",
-        "plant": "Helleborus viridescens",
-        "plant_name": "Yeşile Çalan Çöpleme",
-        "explanation": "'Viridescens', yeşile çalan veya yeşilimsi tonlara bürünen yapıları belirtir.",
-    },
-    {
-        "latin": "Obscurus",
-        "question": "'Obscurus' renk tanımında ne anlama gelir?",
-        "options": ["Açık", "Parlak", "Koyu veya karanlık", "Süt beyazı"],
-        "answer": "Koyu veya karanlık",
-        "plant": "Pinus obscura",
-        "plant_name": "Koyu Karaçam",
-        "explanation": "'Obscurus', koyu ve karanlık renk tonlarını ifade eder.",
-    },
-    {
-        "latin": "Nitidus",
-        "question": "'Nitidus' hangi özelliği anlatır?",
-        "options": ["Mat", "Parlak", "Soluk", "Kül grisi"],
-        "answer": "Parlak",
-        "plant": "Ilex nitida",
-        "plant_name": "Parlak Çobanpüskülü",
-        "explanation": "'Nitidus', parlak ve cilalı görünüme sahip yaprak yüzeylerini niteler.",
-    },
-    {
-        "latin": "Maculatus",
-        "question": "'Maculatus' ne anlama gelir?",
-        "options": ["Çizgili", "Düz renkli", "Benekli", "Şeffaf"],
-        "answer": "Benekli",
-        "plant": "Arum maculatum",
-        "plant_name": "Benekli Yılan Yastığı",
-        "explanation": "'Maculatus', yaprak veya çiçeklerde benekli desenleri tanımlar.",
-    },
-    {
-        "latin": "Striatus",
-        "question": "'Striatus' ne anlama gelir?",
-        "options": ["Çizgili", "Beyaz", "Kızıl", "Altın rengi"],
-        "answer": "Çizgili",
-        "plant": "Crocus striatus",
-        "plant_name": "Çizgili Çiğdem",
-        "explanation": "'Striatus', çiçek taç yapraklarındaki çizgili desenleri belirtir.",
-    },
-]
 
-# ==========================================
-# OTURUM DURUMU (SESSION STATE)
-# ==========================================
-defaults = {
-    "stage": "register",
-    "name": "",
-    "score": 0,
-    "start_time": 0.0,
-    "elapsed_time": 0.0,
-    "quiz_questions": [],
-    "current_question": 0,
-    "answers": [],
-    "leaderboard": [
-        {"İsim": "Linnaeus", "Doğru Sayısı": 5, "Süre (sn)": 14.2},
-        {"İsim": "Darwin", "Doğru Sayısı": 4, "Süre (sn)": 11.0},
-        {"İsim": "Mendel", "Doğru Sayısı": 3, "Süre (sn)": 9.5},
-    ],
-}
+# ============================================================
+# 3. SORU HAVUZU
+#
+# Her soru:
+# latin, question, answer, options, plant, plant_name,
+# explanation alanlarını içerir.
+#
+# Doğru cevaplar oyuna başlarken A/B/C/D konumlarına
+# mümkün olduğunca dengeli dağıtılır.
+# ============================================================
 
-for key, value in defaults.items():
-    if key not in st.session_state:
-        st.session_state[key] = (
-            value.copy() if isinstance(value, (list, dict)) else value
-        )
+RAW_QUESTIONS = [
+    (
+        "Albus",
+        "'Albus' hangi rengi ifade eder?",
+        "Beyaz",
+        ["Siyah", "Beyaz", "Kırmızı", "Sarı"],
+        "Nymphaea alba",
+        "Beyaz nilüfer",
+        "'Albus' beyaz anlamına gelir. 'Alba', bu sıfatın dişil biçimidir.",
+    ),
+    (
+        "Niger",
+        "'Niger' hangi rengi ifade eder?",
+        "Siyah",
+        ["Yeşil", "Mavi", "Siyah", "Pembe"],
+        "Sambucus nigra",
+        "Kara mürver",
+        "'Niger' siyah, 'nigra' ise bu sıfatın dişil biçimidir.",
+    ),
+    (
+        "Ruber",
+        "'Ruber' hangi rengi ifade eder?",
+        "Kırmızı",
+        ["Kırmızı", "Mor", "Gri", "Beyaz"],
+        "Trifolium rubens",
+        "Kızıl çayır üçgülü",
+        "'Ruber' kırmızı anlamına gelir. 'Rubens' kızaran veya kırmızımsı olmayı anlatabilir.",
+    ),
+    (
+        "Roseus",
+        "'Roseus' hangi rengi ifade eder?",
+        "Pembe",
+        ["Turuncu", "Kahverengi", "Sarı", "Pembe"],
+        "Dianthus",
+        "Karanfil cinsi",
+        "'Roseus' gül pembesi veya pembe anlamına gelir.",
+    ),
+    (
+        "Purpureus",
+        "'Purpureus' hangi rengi ifade eder?",
+        "Mor",
+        ["Mavi", "Mor", "Yeşil", "Gümüş"],
+        "Echinacea purpurea",
+        "Mor ekinezya",
+        "'Purpureus' mor ve erguvan tonlarını ifade eder.",
+    ),
+    (
+        "Violaceus",
+        "'Violaceus' hangi rengi ifade eder?",
+        "Menekşe moru",
+        ["Kahverengi", "Sarı", "Menekşe moru", "Beyaz"],
+        "Viola odorata",
+        "Kokulu menekşe",
+        "'Violaceus' menekşe moru anlamına gelir.",
+    ),
+    (
+        "Caeruleus",
+        "'Caeruleus' hangi rengi ifade eder?",
+        "Mavi",
+        ["Gri", "Mavi", "Siyah", "Kırmızı"],
+        "Plumbago auriculata",
+        "Mavi çiçekli plumbago",
+        "'Caeruleus' mavi veya gök mavisi anlamına gelir.",
+    ),
+    (
+        "Flavus",
+        "'Flavus' hangi rengi ifade eder?",
+        "Sarı",
+        ["Yeşil", "Mor", "Pembe", "Sarı"],
+        "Rosa foetida",
+        "Sarı çiçekli gül türü",
+        "'Flavus' sarı anlamına gelir.",
+    ),
+    (
+        "Luteus",
+        "'Luteus' hangi rengi ifade eder?",
+        "Sarı",
+        ["Sarı", "Mavi", "Siyah", "Gri"],
+        "Iris pseudacorus",
+        "Sarı süsen",
+        "'Luteus' sarı veya sarımsı tonları anlatır.",
+    ),
+    (
+        "Aureus",
+        "'Aureus' hangi rengi ifade eder?",
+        "Altın rengi",
+        ["Gümüş", "Kahverengi", "Altın rengi", "Mor"],
+        "Forsythia",
+        "Altın çanı olarak bilinen çalı cinsi",
+        "'Aureus' altın veya altın rengi anlamına gelir.",
+    ),
+    (
+        "Viridis",
+        "'Viridis' hangi rengi ifade eder?",
+        "Yeşil",
+        ["Kırmızı", "Yeşil", "Pembe", "Turuncu"],
+        "Helleborus viridis",
+        "Yeşil çöpleme",
+        "'Viridis' yeşil anlamına gelir.",
+    ),
+    (
+        "Glaucus",
+        "'Glaucus' bitki rengini tanımlarken ne anlama gelir?",
+        "Mavimsi yeşil veya grimsi mavi",
+        ["Parlak sarı", "Koyu kırmızı", "Saf beyaz", "Mavimsi yeşil veya grimsi mavi"],
+        "Eucalyptus cinerea",
+        "Gümüş dolar okaliptüsü",
+        "'Glaucus' çoğunlukla mumsu veya puslu görünümlü mavimsi yeşil ve grimsi mavi tonlarını anlatır.",
+    ),
+    (
+        "Cinereus",
+        "'Cinereus' hangi renk tonunu ifade eder?",
+        "Kül grisi",
+        ["Kül grisi", "Altın sarısı", "Pembe", "Mor"],
+        "Eucalyptus cinerea",
+        "Gümüş dolar okaliptüsü",
+        "'Cinereus' kül grisi anlamına gelir.",
+    ),
+    (
+        "Brunneus",
+        "'Brunneus' hangi rengi ifade eder?",
+        "Kahverengi",
+        ["Beyaz", "Mavi", "Kahverengi", "Pembe"],
+        "Brunfelsia",
+        "Brunfelsia bitki cinsi",
+        "'Brunneus' kahverengi anlamına gelir.",
+    ),
+    (
+        "Fuscus",
+        "'Fuscus' hangi renk tonunu ifade eder?",
+        "Koyu kahverengi veya esmer",
+        ["Açık mavi", "Koyu kahverengi veya esmer", "Kar beyazı", "Parlak pembe"],
+        "Botanik renk sıfatı",
+        "Koyu renkleri anlatan sıfat",
+        "'Fuscus' koyu kahverengi, esmer veya koyu renkli anlamına gelebilir.",
+    ),
+    (
+        "Fulvus",
+        "'Fulvus' hangi renk tonunu ifade eder?",
+        "Sarımsı kahverengi",
+        ["Mavi", "Siyah", "Mor", "Sarımsı kahverengi"],
+        "Botanik renk sıfatı",
+        "Toprak tonlarını anlatan sıfat",
+        "'Fulvus' sarımsı kahverengi veya boz tonları anlatır.",
+    ),
+    (
+        "Rufus",
+        "'Rufus' hangi rengi ifade eder?",
+        "Kızıl veya kızıl kahverengi",
+        ["Kızıl veya kızıl kahverengi", "Yeşil", "Beyaz", "Gök mavisi"],
+        "Botanik renk sıfatı",
+        "Kızıl tonları anlatan sıfat",
+        "'Rufus' kızıl veya kızıl kahverengi anlamına gelir.",
+    ),
+    (
+        "Atropurpureus",
+        "'Atropurpureus' hangi renk tonunu ifade eder?",
+        "Çok koyu mor",
+        ["Açık sarı", "Çok koyu mor", "Beyaz", "Gümüş"],
+        "Ocimum tenuiflorum",
+        "Kutsal fesleğen",
+        "'Atropurpureus' siyaha yaklaşan çok koyu mor tonunu anlatır.",
+    ),
+    (
+        "Pallidus",
+        "'Pallidus' ne anlama gelir?",
+        "Soluk veya açık renkli",
+        ["Çok parlak", "Koyu siyah", "Soluk veya açık renkli", "Altın rengi"],
+        "Botanik renk sıfatı",
+        "Soluk renkleri anlatan sıfat",
+        "'Pallidus' soluk veya açık renkli anlamına gelir.",
+    ),
+    (
+        "Argenteus",
+        "'Argenteus' hangi rengi ifade eder?",
+        "Gümüş rengi",
+        ["Turuncu", "Kahverengi", "Kırmızı", "Gümüş rengi"],
+        "Salix alba",
+        "Ak söğüt",
+        "'Argenteus' gümüş rengi veya gümüşi anlamına gelir.",
+    ),
+    (
+        "Cupreus",
+        "'Cupreus' hangi rengi ifade eder?",
+        "Bakır rengi",
+        ["Bakır rengi", "Mavi", "Beyaz", "Pembe"],
+        "Botanik renk sıfatı",
+        "Bakırımsı tonları anlatan sıfat",
+        "'Cupreus' bakır rengi anlamına gelir.",
+    ),
+    (
+        "Lilacinus",
+        "'Lilacinus' hangi rengi ifade eder?",
+        "Leylak rengi",
+        ["Yeşil", "Leylak rengi", "Siyah", "Sarı"],
+        "Syringa vulgaris",
+        "Adi leylak",
+        "'Lilacinus' leylak rengi veya açık mor tonları anlatır.",
+    ),
+    (
+        "Lacteus",
+        "'Lacteus' hangi rengi ifade eder?",
+        "Süt beyazı",
+        ["Koyu kahverengi", "Mor", "Süt beyazı", "Turuncu"],
+        "Euphorbia lactea",
+        "Sütleğen türü",
+        "'Lacteus' süt beyazı anlamına gelir.",
+    ),
+    (
+        "Niveus",
+        "'Niveus' hangi rengi ifade eder?",
+        "Kar beyazı",
+        ["Kızıl", "Yeşil", "Mavi", "Kar beyazı"],
+        "Galanthus nivalis",
+        "Kardelen",
+        "'Niveus' kar beyazı anlamına gelir.",
+    ),
+    (
+        "Bicolor",
+        "'Bicolor' ne anlama gelir?",
+        "İki renkli",
+        ["İki renkli", "Tek renkli", "Renksiz", "Kül grisi"],
+        "Viola tricolor",
+        "Hercai menekşe",
+        "'Bicolor' iki renkli anlamına gelir.",
+    ),
+    (
+        "Tricolor",
+        "'Tricolor' ne anlama gelir?",
+        "Üç renkli",
+        ["Siyah", "Üç renkli", "Altın sarısı", "Gri"],
+        "Viola tricolor",
+        "Hercai menekşe",
+        "'Tricolor' üç renkli anlamına gelir.",
+    ),
+    (
+        "Versicolor",
+        "'Versicolor' ne anlama gelir?",
+        "Çok renkli veya renk değiştiren",
+        ["Beyaz", "Kırmızı", "Çok renkli veya renk değiştiren", "Koyu yeşil"],
+        "Lantana camara",
+        "Mine çalısı",
+        "'Versicolor' çok renkli veya farklı renkler gösterebilen anlamına gelir.",
+    ),
+    (
+        "Coccineus",
+        "'Coccineus' hangi rengi ifade eder?",
+        "Parlak kırmızı",
+        ["Gri", "Parlak kırmızı", "Mavimsi yeşil", "Kahverengi"],
+        "Salvia coccinea",
+        "Kırmızı çiçekli adaçayı",
+        "'Coccineus' parlak kırmızı veya al rengini ifade eder.",
+    ),
+    (
+        "Sanguineus",
+        "'Sanguineus' hangi rengi ifade eder?",
+        "Kan kırmızısı",
+        ["Kan kırmızısı", "Soluk sarı", "Gümüş", "Yeşil"],
+        "Botanik renk sıfatı",
+        "Derin kırmızı tonlarını anlatan sıfat",
+        "'Sanguineus' kan kırmızısı anlamına gelir.",
+    ),
+    (
+        "Pallens",
+        "'Pallens' hangi özelliği ifade eder?",
+        "Soluk veya solgun",
+        ["Çok koyu", "Altın rengi", "Soluk veya solgun", "Bakır rengi"],
+        "Botanik renk sıfatı",
+        "Solgun renkleri anlatan sıfat",
+        "'Pallens' soluk veya solgun anlamına gelir.",
+    ),
+    (
+        "Rubescens",
+        "'Rubescens' ne anlama gelir?",
+        "Kırmızılaşan",
+        ["Yeşile dönen", "Kırmızılaşan", "Beyazlaşan", "Maviye dönen"],
+        "Trifolium rubens",
+        "Kızıl çayır üçgülü",
+        "'Rubescens' kızaran veya kırmızılaşan anlamına gelir.",
+    ),
+    (
+        "Albicans",
+        "'Albicans' hangi anlamı taşır?",
+        "Beyazımsı",
+        ["Siyahımsı", "Sarımsı", "Beyazımsı", "Kızılımsı"],
+        "Botanik renk sıfatı",
+        "Beyaza çalan tonları anlatan sıfat",
+        "'Albicans' beyazımsı anlamına gelir.",
+    ),
+    (
+        "Flavescens",
+        "'Flavescens' ne anlama gelir?",
+        "Sarılaşan",
+        ["Mavileşen", "Kararan", "Morlaşan", "Sarılaşan"],
+        "Botanik renk sıfatı",
+        "Sarıya dönen tonları anlatan sıfat",
+        "'Flavescens' sarılaşan veya sarımsı anlamına gelir.",
+    ),
+    (
+        "Viridescens",
+        "'Viridescens' ne anlama gelir?",
+        "Yeşile dönen",
+        ["Yeşile dönen", "Kırmızılaşan", "Beyazlaşan", "Kararan"],
+        "Botanik renk sıfatı",
+        "Yeşile dönen tonları anlatan sıfat",
+        "'Viridescens' yeşilimsi veya yeşile dönen anlamına gelir.",
+    ),
+    (
+        "Obscurus",
+        "'Obscurus' renk tanımında ne anlama gelir?",
+        "Koyu veya karanlık",
+        ["Açık", "Parlak", "Koyu veya karanlık", "Süt beyazı"],
+        "Botanik renk sıfatı",
+        "Koyu tonları anlatan sıfat",
+        "'Obscurus' koyu veya karanlık anlamına gelir.",
+    ),
+    (
+        "Nitidus",
+        "'Nitidus' hangi özelliği anlatır?",
+        "Parlak",
+        ["Mat", "Parlak", "Soluk", "Kül grisi"],
+        "Botanik görünüm sıfatı",
+        "Parlak yüzeyleri anlatan sıfat",
+        "'Nitidus' parlak veya cilalı görünümlü anlamına gelir.",
+    ),
+    (
+        "Maculatus",
+        "'Maculatus' ne anlama gelir?",
+        "Benekli",
+        ["Çizgili", "Düz renkli", "Benekli", "Şeffaf"],
+        "Pulmonaria officinalis",
+        "Akciğer otu",
+        "'Maculatus' benekli anlamına gelir; doğrudan bir renk değil, desen belirtir.",
+    ),
+    (
+        "Striatus",
+        "'Striatus' ne anlama gelir?",
+        "Çizgili",
+        ["Çizgili", "Beyaz", "Kızıl", "Altın rengi"],
+        "Botanik desen sıfatı",
+        "Çizgili görünümü anlatan sıfat",
+        "'Striatus' çizgili anlamına gelir.",
+    ),
 
-# ==========================================
-# 1. KAYIT EKRANI
-# ==========================================
-if st.session_state.stage == "register":
-    st.title("🌿 Latince Botanik Renkleri Quiz'i")
-    st.markdown(
-        "Botanikte sıkça kullanılan Latince renk terimlerini, köklerini ve örnek bitkileri keşfetmek için teste başla!"
-    )
-
-    with st.container():
-        st.markdown('<div class="card-box">', unsafe_allow_html=True)
-        with st.form("register_form"):
-            name_input = st.text_input(
-                "Adınız Soyadınız:", placeholder="Örn: Karl Linnaeus"
-            )
-            total_questions = st.selectbox(
-                "Kaç soru çözmek istersin?",
-                [5, 10, 15, 20, len(QUESTIONS)],
-                index=1,
-            )
-            submitted = st.form_submit_button("Quiz'i Başlat 🚀")
-
-            if submitted:
-                if not name_input.strip():
-                    st.warning("Lütfen adınızı girin.")
-                else:
-                    st.session_state.name = name_input.strip()
-                    st.session_state.score = 0
-                    st.session_state.current_question = 0
-                    st.session_state.answers = []
-                    st.session_state.start_time = time.time()
-                    st.session_state.elapsed_time = 0.0
-
-                    # Soruları ve şıkları karıştır
-                    shuffled = QUESTIONS.copy()
-                    random.shuffle(shuffled)
-                    count = min(total_questions, len(shuffled))
-                    selected_questions = shuffled[:count]
-
-                    for q in selected_questions:
-                        q["options"] = q["options"].copy()
-                        random.shuffle(q["options"])
-
-                    st.session_state.quiz_questions = selected_questions
-                    st.session_state.stage = "quiz"
-                    st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
-
-# ==========================================
-# 2. SORU EKRANI
-# ==========================================
-elif st.session_state.stage == "quiz":
-    questions = st.session_state.quiz_questions
-    index = st.session_state.current_question
-    q = questions[index]
-
-    st.title("🌿 Latince Botanik Renkleri Testi")
-    st.progress((index + 1) / len(questions))
-    st.caption(f"Soru {index + 1} / {len(questions)}")
-
-    st.markdown('<div class="card-box">', unsafe_allow_html=True)
-    st.markdown(f"### ❓ {q['question']}")
-
-    with st.form(f"question_form_{index}"):
-        selected = st.radio(
-            "Seçeneklerden birini işaretle:",
-            q["options"],
-            index=None,
-        )
-        submitted = st.form_submit_button("Cevabı Kontrol Et 🌱")
-
-        if submitted:
-            if selected is None:
-                st.warning("Lütfen bir seçenek seçin.")
-            else:
-                correct = selected == q["answer"]
-                if correct:
-                    st.session_state.score += 1
-
-                st.session_state.answers.append({
-                    "latin": q["latin"],
-                    "selected": selected,
-                    "correct": q["answer"],
-                    "is_correct": correct,
-                })
-                st.session_state.stage = "feedback"
-                st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ==========================================
-# 3. GERİBİLDİRİM VE BİTKİ ÖRNEĞİ EKRANI
-# ==========================================
-elif st.session_state.stage == "feedback":
-    questions = st.session_state.quiz_questions
-    index = st.session_state.current_question
-    q = questions[index]
-    answer = st.session_state.answers[-1]
-
-    st.title("🌸 Cevap ve Botanik Örneği")
-
-    st.markdown('<div class="card-box">', unsafe_allow_html=True)
-    if answer["is_correct"]:
-        st.success("🎉 Doğru cevap!")
-    else:
-        st.error(
-            f"❌ Yanlış cevap. Doğru cevap: **{q['answer']}** olmalıydı."
-        )
-
-    st.markdown(f"### 🏷️ Latince Terim: `{q['latin']}`")
-    st.divider()
-    st.markdown("#### 🌿 Örnek Bitki ve Açıklaması")
-    st.markdown(f"**Bilimsel Adı:** *{q['plant']}* ({q['plant_name']})")
-    st.info(q["explanation"])
-
-    st.metric(
-        "Mevcut Puanın",
-        f"{st.session_state.score} / {len(st.session_state.answers)}",
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    if index + 1 < len(questions):
-        if st.button("Sonraki Soru ➡️", use_container_width=True):
-            st.session_state.current_question += 1
-            st.session_state.stage = "quiz"
-            st.rerun()
-    else:
-        if st.button("Sonuçları Gör 🏆", use_container_width=True):
-            st.session_state.elapsed_time = round(
-                time.time() - st.session_state.start_time, 2
-            )
-            st.session_state.leaderboard.append({
-                "İsim": st.session_state.name,
-                "Doğru Sayısı": st.session_state.score,
-                "Süre (sn)": st.session_state.elapsed_time,
-            })
-            st.session_state.stage = "result"
-            st.rerun()
-
-# ==========================================
-# 4. SONUÇ VE LİDERLİK TABLOSU EKRANI
-# ==========================================
-elif st.session_state.stage == "result":
-    questions = st.session_state.quiz_questions
-
-    st.title("🏆 Quiz Tamamlandı!")
-
-    st.markdown('<div class="card-box">', unsafe_allow_html=True)
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric(
-            "Toplam Doğru",
-            f"{st.session_state.score} / {len(questions)}",
-        )
-    with col2:
-        st.metric(
-            "Tamamlama Süresi",
-            f"{st.session_state.elapsed_time} saniye",
-        )
-
-    if st.session_state.score == len(questions):
-        st.balloons()
-        st.success("Mükemmel! Bütün soruları kusursuz yanıtladın! 🌿🌟")
-    elif st.session_state.score >= len(questions) / 2:
-        st.success("Harika iş! Botanik renk bilgini oldukça geliştirdin.")
-    else:
-        st.info("Tekrar deneyerek latince terimlerdeki ustalığını artırabilirsin.")
-    st.markdown("</div>", unsafe_allow_html=True)
-
-    st.subheader("📋 Cevap Özeti")
-    with st.expander("Detaylı soru incelemesi için tıkla"):
-        for i, answer in enumerate(st.session_state.answers):
-            symbol = "✅" if answer["is_correct"] else "❌"
-            st.write(
-                f"{symbol} **{i + 1}. {answer['latin']}** — "
-                f"Senin cevabın: *{answer['selected']}* | "
-                f"Doğru cevap: *{answer['correct']}*"
-            )
-
-    st.divider()
-    st.subheader("🌟 En İyi Botanistler (Liderlik Tablosu)")
-
-    df = pd.DataFrame(st.session_state.leaderboard)
-    df = df.sort_values(
-        by=["Doğru Sayısı", "Süre (sn)"],
-        ascending=[False, True],
-    ).reset_index(drop=True)
-    df.index = df.index + 1
-
-    st.dataframe(df, use_container_width=True)
-    st.caption(
-        "📌 Sıralama kuralı: Önce en yüksek doğru sayısı, eşitlik durumunda en kısa süre baz alınır."
-    )
-
-    if st.button("Yeniden Oyna 🔄", use_container_width=True):
-        st.session_state.stage = "register"
-        st.session_state.name = ""
-        st.session_state.score = 0
-        st.session_state.current_question = 0
-        st.session_state.answers = []
-        st.session_state.quiz_questions = []
-        st.session_state.elapsed_time = 0.0
-        st.rerun()
+    # Ek renkler ve tonlar
+    (
+        "Azureus",
+        "'Azureus' hangi rengi ifade eder?",
+        "Azur veya gök mavisi",
+        ["Koyu kahverengi", "Azur veya gök mavisi", "Siyah", "Pembe"],
+        "Botanik renk sıfatı",
+        "Mavi tonlarını anlatan sıfat",
+        "'Azureus' azur veya gök mavisi anlamına gelir.",
+    ),
+    (
+        "Canus",
+        "'Canus' hangi renk tonunu ifade eder?",
+        "Beyazımsı gri",
+        ["Turuncu", "Mor", "Beyazımsı gri", "Parlak kırmızı"],
+        "Botanik renk sıfatı",
+        "Gri-beyaz tonlarını anlatan sıfat",
+        "'Canus' beyazımsı gri veya kırçıllı görünümü anlatabilir.",
+    ),
+    (
+        "Lividus",
+        "'Lividus' hangi renk tonunu ifade eder?",
+        "Kurşuni veya mavimsi gri",
+        ["Altın sarısı", "Kurşuni veya mavimsi gri", "Pembe", "Ye
