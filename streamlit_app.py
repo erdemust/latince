@@ -20,7 +20,7 @@ st.set_page_config(
 
 
 # ============================================================
-# 2. TASARIM
+# 2. TASARIM SİSTEMİ
 # ============================================================
 
 st.markdown(
@@ -312,9 +312,7 @@ RAW_QUESTIONS = [
 
 def build_question_pool():
     """Soru verilerini kontrol eder ve standart biçime dönüştürür."""
-
     result = []
-
     for item in RAW_QUESTIONS:
         latin, answer, options, plant, plant_name, explanation = item
 
@@ -343,7 +341,6 @@ def build_question_pool():
                 "explanation": explanation,
             }
         )
-
     return result
 
 
@@ -406,19 +403,15 @@ def safe_text(value):
 
 def format_seconds(seconds):
     """Saniyeyi dakika ve saniye biçimine dönüştürür."""
-
     seconds = max(0, int(seconds))
     minutes, remaining = divmod(seconds, 60)
-
     if minutes:
         return f"{minutes} dk {remaining} sn"
-
     return f"{remaining} sn"
 
 
 def make_balanced_questions(count):
     """Geçerli soruları seçer ve doğru cevapların konumlarını dengeler."""
-
     if not QUESTIONS:
         raise ValueError("Soru havuzu boş.")
 
@@ -477,9 +470,7 @@ def make_balanced_questions(count):
 
 def start_quiz(name, count):
     """Yeni test başlatır."""
-
     name = str(name).strip()
-
     if not name:
         raise ValueError("Lütfen bir ad girin.")
 
@@ -501,9 +492,7 @@ def start_quiz(name, count):
 
 def save_result():
     """Sonucu liderlik tablosuna yalnızca bir kez ekler."""
-
     run_id = st.session_state.get("run_id")
-
     if not run_id:
         return
 
@@ -511,7 +500,6 @@ def save_result():
         return
 
     questions = st.session_state.quiz_questions
-
     if not questions:
         return
 
@@ -537,7 +525,6 @@ def save_result():
 
 def reset_quiz(clear_name=False):
     """Yeni bir test için gerekli durumu sıfırlar."""
-
     st.session_state.update({
         "stage": "register",
         "score": 0,
@@ -556,18 +543,15 @@ def reset_quiz(clear_name=False):
 
 def render_leaderboard():
     """Liderlik tablosunu puana ve süreye göre sıralar."""
-
     if not st.session_state.leaderboard:
         st.info("Henüz sonuç bulunmuyor.")
         return
 
     df = pd.DataFrame(st.session_state.leaderboard)
-
     df = df.sort_values(
         by=["Doğru Sayısı", "Süre (sn)"],
         ascending=[False, True],
     ).reset_index(drop=True)
-
     df.index = df.index + 1
 
     st.dataframe(
@@ -615,7 +599,6 @@ def render_register():
         )
 
         count_options = [5, 10, 15, 20]
-
         selected_count = st.selectbox(
             "Soru sayısı",
             count_options,
@@ -653,11 +636,9 @@ def render_quiz():
 
     if not questions:
         st.error("Soru bulunamadı. Lütfen yeni bir test başlatın.")
-
         if st.button("Ana Sayfaya Dön"):
             reset_quiz()
             st.rerun()
-
         return
 
     if index < 0 or index >= len(questions):
@@ -670,10 +651,8 @@ def render_quiz():
     st.progress((index + 1) / len(questions))
 
     col1, col2 = st.columns(2)
-
     with col1:
         st.caption(f"Soru {index + 1} / {len(questions)}")
-
     with col2:
         st.caption(f"Puan: {st.session_state.score}")
 
@@ -689,7 +668,6 @@ def render_quiz():
     )
 
     options = list(dict.fromkeys(q["options"]))
-
     if len(options) != 4:
         st.error("Bu sorunun seçenekleri geçersiz.")
         return
@@ -715,7 +693,6 @@ def render_quiz():
             return
 
         is_correct = selected == q["answer"]
-
         if is_correct:
             st.session_state.score += 1
 
@@ -740,7 +717,6 @@ def render_quiz():
 
 def render_feedback():
     answers = st.session_state.answers
-
     if not answers:
         st.session_state.stage = "quiz"
         st.rerun()
@@ -752,7 +728,6 @@ def render_feedback():
         st.success("🎉 Harika! Doğru cevap.")
     else:
         st.error("Yanlış cevap.")
-
         st.markdown(
             f"**Doğru cevap:** {safe_text(answer['correct'])}",
             unsafe_allow_html=True,
@@ -804,11 +779,9 @@ def render_result():
 
     if total == 0:
         st.warning("Gösterilecek test sonucu bulunamadı.")
-
         if st.button("Ana Sayfaya Dön"):
             reset_quiz()
             st.rerun()
-
         return
 
     percentage = score / total * 100
@@ -859,7 +832,6 @@ def render_result():
             st.divider()
 
     col1, col2 = st.columns(2)
-
     with col1:
         if st.button("Tekrar Oyna 🔄", use_container_width=True):
             reset_quiz()
@@ -879,19 +851,14 @@ if not QUESTIONS:
     st.error(
         "Soru havuzu yüklenemedi. RAW_QUESTIONS listesini kontrol edin."
     )
-
 elif st.session_state.stage == "register":
     render_register()
-
 elif st.session_state.stage == "quiz":
     render_quiz()
-
 elif st.session_state.stage == "feedback":
     render_feedback()
-
 elif st.session_state.stage == "result":
     render_result()
-
 else:
     st.session_state.stage = "register"
     st.rerun()
