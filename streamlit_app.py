@@ -1,8 +1,13 @@
 from future import annotations
+import csv 
+import io 
+import random 
+from pathlib import Path
+import pandas as pd 
+import streamlit as st
 
-import csv import io import random from pathlib import Path
 
-import pandas as pd import streamlit as st
+
 
 ============================================================
 CONFIGURATION
