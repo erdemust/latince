@@ -1,49 +1,53 @@
 import html
 import random
+import sqlite3
 import time
 import uuid
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
 
 
 # ============================================================
-# 1. SAYFA AYARLARI
+# 1. UYGULAMA AYARLARI
 # ============================================================
 
 st.set_page_config(
-    page_title="Botanica Akademi | Latince Botanik",
+    page_title="Botanica Akademi | Öğrenci Sınavı",
     page_icon="🌿",
     layout="centered",
     initial_sidebar_state="collapsed",
 )
 
+BASE_DIR = Path(__file__).resolve().parent
+DB_PATH = BASE_DIR / "botanica_sinav.db"
+
 
 # ============================================================
-# 2. TASARIM SİSTEMİ
+# 2. TASARIM
 # ============================================================
 
 st.markdown(
     """
     <style>
     :root {
-        --botanica-green: #3ddc97;
-        --botanica-deep: #123c2d;
-        --botanica-soft: #e5f7ed;
+        --green: #3ddc97;
+        --deep: #123c2d;
     }
 
     .stApp {
         background:
             radial-gradient(
                 ellipse at top left,
-                rgba(61, 220, 151, 0.10),
-                transparent 42%
+                rgba(61,220,151,.10),
+                transparent 45%
             );
     }
 
     .block-container {
         max-width: 900px;
-        padding: 2rem 1.2rem 4rem;
+        padding: 2rem 1rem 4rem;
     }
 
     #MainMenu,
@@ -54,113 +58,68 @@ st.markdown(
     .hero {
         padding: 2rem;
         margin-bottom: 1.5rem;
-        border: 1px solid rgba(61, 220, 151, .25);
-        border-radius: 26px;
-        background: linear-gradient(
-            135deg,
-            #123c2d,
-            #17533c
-        );
-        color: #f4fff8;
-        box-shadow: 0 18px 45px rgba(0, 0, 0, .10);
-    }
-
-    .eyebrow {
-        color: #7df0b8;
-        font-size: .76rem;
-        font-weight: 850;
-        letter-spacing: .16em;
-        text-transform: uppercase;
-        margin-bottom: .7rem;
+        border: 1px solid rgba(61,220,151,.25);
+        border-radius: 24px;
+        background: linear-gradient(135deg,#123c2d,#17533c);
+        color: #fff;
     }
 
     .hero h1 {
-        color: #ffffff;
-        font-size: clamp(2rem, 6vw, 3.3rem);
+        color: #fff;
+        font-size: clamp(2rem,6vw,3.2rem);
         font-weight: 900;
-        letter-spacing: -.045em;
-        line-height: 1.12;
-        margin: .2rem 0 1rem;
+        line-height: 1.15;
     }
 
     .hero p {
         color: #d9f5e5;
         line-height: 1.8;
-        font-size: 1rem;
-    }
-
-    .hero-badges {
-        display: flex;
-        flex-wrap: wrap;
-        gap: .5rem;
-        margin-top: 1.3rem;
-    }
-
-    .badge {
-        display: inline-block;
-        padding: .45rem .75rem;
-        border: 1px solid rgba(255, 255, 255, .20);
-        border-radius: 999px;
-        background: rgba(255, 255, 255, .08);
-        color: #eafff2;
-        font-size: .8rem;
-        font-weight: 650;
-    }
-
-    .panel {
-        padding: 1.5rem;
-        margin: 1rem 0;
-        border: 1px solid var(--default-border-color);
-        border-radius: 22px;
-        background: var(--secondary-background-color);
     }
 
     .latin {
-        font-size: clamp(2.3rem, 8vw, 4rem);
+        font-size: clamp(2rem,7vw,3.7rem);
         font-weight: 900;
         font-style: italic;
-        letter-spacing: -.045em;
         overflow-wrap: anywhere;
-        line-height: 1.1;
-        margin: .6rem 0 1rem;
+        line-height: 1.2;
     }
 
-    .metric-card {
-        padding: 1rem;
-        min-height: 100px;
+    .panel {
+        padding: 1.4rem;
+        margin: 1rem 0;
         border: 1px solid var(--default-border-color);
-        border-radius: 18px;
+        border-radius: 20px;
+        background: var(--secondary-background-color);
+    }
+
+    .metric {
+        padding: 1rem;
+        border: 1px solid var(--default-border-color);
+        border-radius: 16px;
         background: var(--secondary-background-color);
     }
 
     .metric-label {
-        font-size: .78rem;
         opacity: .7;
-        margin-bottom: .45rem;
+        font-size: .8rem;
     }
 
     .metric-value {
-        font-size: clamp(1.25rem, 4vw, 2rem);
-        font-weight: 900;
-        letter-spacing: -.035em;
+        font-size: 1.6rem;
+        font-weight: 850;
         overflow-wrap: anywhere;
     }
 
     .stButton > button,
     .stFormSubmitButton > button {
-        min-height: 48px;
-        border-radius: 13px;
+        min-height: 46px;
+        border-radius: 12px;
         font-weight: 750;
     }
 
-    div[data-testid="stProgressBar"] > div > div {
-        background-color: #3ddc97;
-    }
-
-    @media (max-width: 600px) {
+    @media(max-width:600px) {
         .hero {
-            padding: 1.35rem;
-            border-radius: 20px;
+            padding: 1.3rem;
         }
 
         .panel {
@@ -175,9 +134,6 @@ st.markdown(
 
 # ============================================================
 # 3. SORU HAVUZU
-# Her soru:
-# Latince terim, anlam, seçenekler, bilimsel ad,
-# Türkçe bitki adı ve açıklama
 # ============================================================
 
 RAW_QUESTIONS = [
@@ -188,8 +144,8 @@ RAW_QUESTIONS = [
         "Nymphaea alba",
         "Beyaz nilüfer",
         "'Albus' Latince beyaz anlamına gelir. "
-        "'Alba' dişil, 'album' ise nötr biçimidir. "
-        "Nymphaea alba beyaz çiçekleriyle tanınır.",
+        "'Alba' dişil biçimidir. Nymphaea alba beyaz "
+        "çiçekleriyle tanınır."
     ),
     (
         "Niger",
@@ -198,8 +154,7 @@ RAW_QUESTIONS = [
         "Sambucus nigra",
         "Kara mürver",
         "'Niger' siyah veya çok koyu anlamına gelir. "
-        "'Nigra' dişil biçimidir. Kara mürverin olgun "
-        "meyveleri koyu mor-siyah renktedir.",
+        "'Nigra' dişil biçimidir."
     ),
     (
         "Ruber",
@@ -208,8 +163,7 @@ RAW_QUESTIONS = [
         "Quercus rubra",
         "Kırmızı meşe",
         "'Ruber' kırmızı anlamına gelir. 'Rubra' dişil "
-        "biçimidir. Kırmızı meşe yaprakları özellikle "
-        "sonbaharda kızıl tonlar alabilir.",
+        "biçimidir."
     ),
     (
         "Roseus",
@@ -217,9 +171,7 @@ RAW_QUESTIONS = [
         ["Turuncu", "Kahverengi", "Sarı", "Gül pembesi"],
         "Catharanthus roseus",
         "Madagaskar cezayir menekşesi",
-        "'Roseus' gül renginde anlamına gelir. "
-        "Catharanthus roseus pembe çiçekli formlarıyla "
-        "bilinir; beyaz çiçekli çeşitleri de vardır.",
+        "'Roseus' gül renginde anlamına gelir."
     ),
     (
         "Purpureus",
@@ -227,9 +179,7 @@ RAW_QUESTIONS = [
         ["Mavi", "Mor veya erguvan", "Yeşil", "Gümüş"],
         "Echinacea purpurea",
         "Mor ekinezya",
-        "'Purpureus' mor veya erguvan tonlarını ifade eder. "
-        "'Purpurea' dişil biçimidir. Mor ekinezyanın "
-        "çiçekleri pembe-mor tonlarında olabilir.",
+        "'Purpureus' mor veya erguvan tonlarını ifade eder."
     ),
     (
         "Caeruleus",
@@ -239,7 +189,7 @@ RAW_QUESTIONS = [
         "Mavi nilüfer",
         "'Caeruleus' gök mavisi anlamına gelir. "
         "'Caerulea' dişil biçimidir. Nymphaea caerulea "
-        "mavi tonlardaki çiçekleriyle tanınır.",
+        "mavi tonlardaki çiçekleriyle tanınır."
     ),
     (
         "Flavus",
@@ -247,28 +197,23 @@ RAW_QUESTIONS = [
         ["Yeşil", "Mor", "Pembe", "Sarı"],
         "Glaucium flavum",
         "Sarı boynuzlu haşhaş",
-        "'Flavus' sarı anlamına gelir. 'Flavum' nötr "
-        "biçimidir. Glaucium flavum sarı çiçekler açar.",
+        "'Flavus' sarı anlamına gelir."
     ),
     (
         "Luteus",
         "Sarı veya sarımsı",
         ["Sarı veya sarımsı", "Mavi", "Siyah", "Gri"],
         "Reseda lutea",
-        "Sarı muhabbet çiçeği",
-        "'Luteus' sarı veya sarımsı anlamına gelir. "
-        "'Lutea' dişil biçimidir. Reseda lutea sarı "
-        "çiçekleriyle tanınır.",
+        "Reseda",
+        "'Luteus' sarı veya sarımsı anlamına gelir."
     ),
     (
         "Aureus",
         "Altın rengi",
         ["Gümüş", "Kahverengi", "Altın rengi", "Mor"],
-        "Carex aurea",
-        "Altın saz",
-        "'Aureus' altın renginde anlamına gelir. "
-        "'Aurea' dişil biçimidir. Bu sözcük altın sarısı "
-        "tonlarını tanımlamak için kullanılır.",
+        "Botanik renk sıfatı",
+        "Altın rengi",
+        "'Aureus' altın renginde anlamına gelir."
     ),
     (
         "Viridis",
@@ -276,20 +221,21 @@ RAW_QUESTIONS = [
         ["Kırmızı", "Yeşil", "Pembe", "Turuncu"],
         "Helleborus viridis",
         "Yeşil çöpleme",
-        "'Viridis' yeşil anlamına gelir. Bu sözcük "
-        "botanikte yeşil renkli organları tanımlamak "
-        "için kullanılan sıfatlardan biridir.",
+        "'Viridis' yeşil anlamına gelir."
     ),
     (
         "Glaucus",
         "Mavimsi yeşil veya grimsi mavi",
-        ["Parlak sarı", "Koyu kırmızı", "Saf beyaz",
-         "Mavimsi yeşil veya grimsi mavi"],
+        [
+            "Parlak sarı",
+            "Koyu kırmızı",
+            "Saf beyaz",
+            "Mavimsi yeşil veya grimsi mavi"
+        ],
         "Rosa glauca",
         "Mavimsi yapraklı gül",
         "'Glaucus' mavimsi yeşil veya grimsi mavi "
-        "tonları ifade eder. 'Glauca' dişil biçimidir. "
-        "Yapraklardaki mumsu yüzey bu görünümü etkileyebilir.",
+        "tonları ifade eder."
     ),
     (
         "Cinereus",
@@ -297,9 +243,7 @@ RAW_QUESTIONS = [
         ["Kül grisi", "Altın sarısı", "Pembe", "Mor"],
         "Eucalyptus cinerea",
         "Gümüş dolar okaliptüsü",
-        "'Cinereus' kül rengi anlamına gelir. "
-        "'Cinerea' dişil biçimidir. Bu terim griye "
-        "çalan yüzeyleri tanımlayabilir.",
+        "'Cinereus' kül rengi anlamına gelir."
     ),
     (
         "Brunneus",
@@ -307,41 +251,41 @@ RAW_QUESTIONS = [
         ["Beyaz", "Mavi", "Kahverengi", "Pembe"],
         "Botanik renk sıfatı",
         "Kahverengi",
-        "'Brunneus' kahverengi anlamına gelir. "
-        "Bitki tanımlarında kahverengi organları "
-        "veya yüzeyleri niteleyebilir.",
+        "'Brunneus' kahverengi anlamına gelir."
     ),
     (
         "Rufus",
         "Kızıl veya kızıl kahverengi",
-        ["Kızıl veya kızıl kahverengi", "Yeşil",
-         "Beyaz", "Gök mavisi"],
+        [
+            "Kızıl veya kızıl kahverengi",
+            "Yeşil",
+            "Beyaz",
+            "Gök mavisi"
+        ],
         "Botanik renk sıfatı",
         "Kızıl ton",
-        "'Rufus' kızıl veya kızıl kahverengi anlamına gelir. "
-        "Botanik betimlemelerde kızıl renkli organları "
-        "tanımlamak için kullanılabilir.",
+        "'Rufus' kızıl veya kızıl kahverengi anlamına gelir."
     ),
     (
         "Pallidus",
         "Soluk veya açık renkli",
-        ["Çok parlak", "Koyu siyah",
-         "Soluk veya açık renkli", "Altın rengi"],
+        [
+            "Çok parlak",
+            "Koyu siyah",
+            "Soluk veya açık renkli",
+            "Altın rengi"
+        ],
         "Botanik renk sıfatı",
         "Soluk renk",
-        "'Pallidus' soluk veya açık renkli anlamına gelir. "
-        "'Pallida' dişil biçimidir.",
+        "'Pallidus' soluk veya açık renkli anlamına gelir."
     ),
     (
         "Argenteus",
         "Gümüş rengi",
         ["Turuncu", "Kahverengi", "Kırmızı", "Gümüş rengi"],
-        "Salix argentea",
-        "Gümüşi söğüt",
-        "'Argenteus' gümüş renginde anlamına gelir. "
-        "'Argentea' dişil biçimidir. Bitkilerde gümüşi "
-        "görünüm tüylerden veya yüzey özelliklerinden "
-        "kaynaklanabilir.",
+        "Botanik renk sıfatı",
+        "Gümüş rengi",
+        "'Argenteus' gümüş renginde anlamına gelir."
     ),
     (
         "Bicolor",
@@ -349,9 +293,7 @@ RAW_QUESTIONS = [
         ["İki renkli", "Tek renkli", "Renksiz", "Kül grisi"],
         "Viola bicolor",
         "İki renkli menekşe",
-        "'Bicolor' iki renkli anlamına gelir. "
-        "Botanik tanımlarda iki farklı renk taşıyan "
-        "çiçek veya yaprakları ifade edebilir.",
+        "'Bicolor' iki renkli anlamına gelir."
     ),
     (
         "Tricolor",
@@ -359,31 +301,33 @@ RAW_QUESTIONS = [
         ["Siyah", "Üç renkli", "Altın sarısı", "Gri"],
         "Viola tricolor",
         "Hercai menekşe",
-        "'Tricolor' üç renkli anlamına gelir. "
-        "Hercai menekşenin çiçeklerinde farklı renkler "
-        "bir arada görülebilir.",
+        "'Tricolor' üç renkli anlamına gelir."
     ),
     (
         "Versicolor",
         "Çok renkli veya renkleri değişken",
-        ["Beyaz", "Kırmızı", "Çok renkli veya renkleri değişken",
-         "Koyu yeşil"],
+        [
+            "Beyaz",
+            "Kırmızı",
+            "Çok renkli veya renkleri değişken",
+            "Koyu yeşil"
+        ],
         "Iris versicolor",
         "Çok renkli süsen",
-        "'Versicolor' farklı renkler gösteren anlamına gelir. "
-        "Bu sıfat, birden fazla renk taşıyan organları "
-        "tanımlayabilir.",
+        "'Versicolor' farklı renkler gösteren anlamına gelir."
     ),
     (
         "Coccineus",
         "Parlak kızıl veya al kırmızısı",
-        ["Gri", "Parlak kızıl veya al kırmızısı",
-         "Mavimsi yeşil", "Kahverengi"],
+        [
+            "Gri",
+            "Parlak kızıl veya al kırmızısı",
+            "Mavimsi yeşil",
+            "Kahverengi"
+        ],
         "Salvia coccinea",
         "Kızıl adaçayı",
-        "'Coccineus' parlak kızıl anlamına gelir. "
-        "'Coccinea' dişil biçimidir. Kızıl adaçayı "
-        "parlak kırmızı çiçekler açabilir.",
+        "'Coccineus' parlak kızıl anlamına gelir."
     ),
     (
         "Sanguineus",
@@ -391,8 +335,7 @@ RAW_QUESTIONS = [
         ["Kan kırmızısı", "Soluk sarı", "Gümüş", "Yeşil"],
         "Cornus sanguinea",
         "Kan kızılcığı",
-        "'Sanguineus' kan renginde anlamına gelir. "
-        "'Sanguinea' dişil biçimidir.",
+        "'Sanguineus' kan renginde anlamına gelir."
     ),
     (
         "Spinosus",
@@ -400,9 +343,7 @@ RAW_QUESTIONS = [
         ["Düz yüzeyli", "Dikenli", "Tüysüz", "Yumuşak"],
         "Ruscus aculeatus",
         "Tavşanmemesi",
-        "'Spinosus' dikenli anlamına gelir. "
-        "Botanikte dikenli organları veya dikenli "
-        "görünümü ifade edebilir.",
+        "'Spinosus' dikenli anlamına gelir."
     ),
     (
         "Dentatus",
@@ -410,19 +351,15 @@ RAW_QUESTIONS = [
         ["Düz kenarlı", "Dişli kenarlı", "Yuvarlak", "Tüysüz"],
         "Urtica dioica",
         "Büyük ısırgan",
-        "'Dentatus' dişli anlamına gelir. "
-        "Yaprak kenarlarındaki diş benzeri çıkıntıları "
-        "tanımlamak için kullanılabilir.",
+        "'Dentatus' dişli anlamına gelir."
     ),
     (
         "Glaber",
         "Tüysüz veya pürüzsüz",
         ["Tüylü", "Tüysüz veya pürüzsüz", "Dikenli", "Benekli"],
         "Acer glabrum",
-        "Akçaağaç türü",
-        "'Glaber' tüysüz veya pürüzsüz anlamına gelir. "
-        "Botanikte yüzeyinde tüy bulunmayan organları "
-        "tanımlamak için kullanılır.",
+        "Akçaağaç",
+        "'Glaber' tüysüz veya pürüzsüz anlamına gelir."
     ),
     (
         "Hirsutus",
@@ -430,8 +367,7 @@ RAW_QUESTIONS = [
         ["Pürüzsüz", "Parlak", "Uzun veya sert tüylü", "Tüysüz"],
         "Botanik betimleme terimi",
         "Tüylü yüzey",
-        "'Hirsutus' belirgin, uzun veya sert tüylerle "
-        "kaplı anlamına gelir.",
+        "'Hirsutus' belirgin veya sert tüylerle kaplı anlamına gelir."
     ),
     (
         "Tomentosus",
@@ -439,8 +375,7 @@ RAW_QUESTIONS = [
         ["Parlak", "Sık ve keçemsi tüylü", "Tüysüz", "Dikenli"],
         "Botanik betimleme terimi",
         "Keçemsi tüylü yüzey",
-        "'Tomentosus' sık, yumuşak ve keçemsi tüylerle "
-        "kaplı anlamına gelir.",
+        "'Tomentosus' sık ve keçemsi tüylerle kaplı anlamına gelir."
     ),
     (
         "Maculatus",
@@ -448,8 +383,7 @@ RAW_QUESTIONS = [
         ["Çizgili", "Düz renkli", "Benekli veya lekeli", "Şeffaf"],
         "Botanik betimleme terimi",
         "Benekli yüzey",
-        "'Maculatus' benekli veya lekeli anlamına gelir. "
-        "Yapraklardaki lekeleri tanımlamak için kullanılabilir.",
+        "'Maculatus' benekli veya lekeli anlamına gelir."
     ),
     (
         "Striatus",
@@ -457,7 +391,7 @@ RAW_QUESTIONS = [
         ["Çizgili veya şeritli", "Beyaz", "Kızıl", "Altın rengi"],
         "Botanik betimleme terimi",
         "Çizgili yüzey",
-        "'Striatus' çizgili veya şeritli anlamına gelir.",
+        "'Striatus' çizgili veya şeritli anlamına gelir."
     ),
     (
         "Nitidus",
@@ -465,7 +399,7 @@ RAW_QUESTIONS = [
         ["Mat", "Parlak veya ışıldayan", "Soluk", "Kül grisi"],
         "Botanik betimleme terimi",
         "Parlak yüzey",
-        "'Nitidus' parlak veya ışıldayan anlamına gelir.",
+        "'Nitidus' parlak veya ışıldayan anlamına gelir."
     ),
     (
         "Obscurus",
@@ -473,7 +407,7 @@ RAW_QUESTIONS = [
         ["Açık", "Parlak", "Koyu, karanlık veya mat", "Süt beyazı"],
         "Botanik betimleme terimi",
         "Koyu yüzey",
-        "'Obscurus' koyu veya karanlık anlamına gelir.",
+        "'Obscurus' koyu veya karanlık anlamına gelir."
     ),
     (
         "Subalbus",
@@ -481,8 +415,7 @@ RAW_QUESTIONS = [
         ["Kırmızı", "Beyazımsı", "Siyah", "Mavi"],
         "Botanik betimleme terimi",
         "Beyazımsı renk",
-        "'Sub-' öneki yaklaşık veya bir ölçüde anlamı "
-        "katabilir. 'Subalbus' beyazımsı olarak yorumlanır.",
+        "'Subalbus' beyazımsı anlamına gelir."
     ),
     (
         "Subflavus",
@@ -490,17 +423,20 @@ RAW_QUESTIONS = [
         ["Gümüş", "Mor", "Sarımsı", "Koyu siyah"],
         "Botanik betimleme terimi",
         "Sarımsı renk",
-        "'Subflavus' sarımsı anlamına gelir. "
-        "'Flavus' sarı demektir.",
+        "'Subflavus' sarımsı anlamına gelir."
     ),
     (
         "Rubescens",
         "Kırmızılaşan veya kızaran",
-        ["Yeşile dönen", "Kırmızılaşan veya kızaran",
-         "Beyazlaşan", "Maviye dönen"],
+        [
+            "Yeşile dönen",
+            "Kırmızılaşan veya kızaran",
+            "Beyazlaşan",
+            "Maviye dönen"
+        ],
         "Botanik betimleme terimi",
         "Kızaran yüzey",
-        "'Rubescens' kızaran veya kırmızılaşan anlamına gelir.",
+        "'Rubescens' kızaran veya kırmızılaşan anlamına gelir."
     ),
     (
         "Flavescens",
@@ -508,17 +444,20 @@ RAW_QUESTIONS = [
         ["Mavileşen", "Kararan", "Morlaşan", "Sarılaşan"],
         "Botanik betimleme terimi",
         "Sarılaşan yüzey",
-        "'Flavescens' sarılaşan veya sarımsı hâle gelen "
-        "anlamına gelir.",
+        "'Flavescens' sarılaşan anlamına gelir."
     ),
     (
         "Viridescens",
         "Yeşilimsi veya yeşile dönen",
-        ["Yeşilimsi veya yeşile dönen", "Kırmızılaşan",
-         "Beyazlaşan", "Kararan"],
+        [
+            "Yeşilimsi veya yeşile dönen",
+            "Kırmızılaşan",
+            "Beyazlaşan",
+            "Kararan"
+        ],
         "Botanik betimleme terimi",
         "Yeşilimsi yüzey",
-        "'Viridescens' yeşilimsi veya yeşile dönen anlamına gelir.",
+        "'Viridescens' yeşilimsi veya yeşile dönen anlamına gelir."
     ),
     (
         "Lacteus",
@@ -526,8 +465,7 @@ RAW_QUESTIONS = [
         ["Koyu kahverengi", "Mor", "Süt beyazı", "Turuncu"],
         "Euphorbia lactea",
         "Sütleğen",
-        "'Lacteus' süt renginde anlamına gelir. "
-        "'Lactea' dişil biçimidir.",
+        "'Lacteus' süt renginde anlamına gelir."
     ),
     (
         "Niveus",
@@ -535,7 +473,7 @@ RAW_QUESTIONS = [
         ["Kızıl", "Yeşil", "Mavi", "Kar beyazı"],
         "Botanik betimleme terimi",
         "Kar beyazı renk",
-        "'Niveus' kar gibi beyaz anlamına gelir.",
+        "'Niveus' kar gibi beyaz anlamına gelir."
     ),
     (
         "Azureus",
@@ -543,8 +481,7 @@ RAW_QUESTIONS = [
         ["Koyu kahverengi", "Azur veya gök mavisi", "Siyah", "Pembe"],
         "Salvia azurea",
         "Gök adaçayı",
-        "'Azureus' gök mavisi anlamına gelir. "
-        "'Azurea' dişil biçimidir.",
+        "'Azureus' gök mavisi anlamına gelir."
     ),
     (
         "Canus",
@@ -552,8 +489,7 @@ RAW_QUESTIONS = [
         ["Turuncu", "Mor", "Beyazımsı gri veya kırçıllı", "Parlak kırmızı"],
         "Artemisia cana",
         "Gri yapraklı pelin",
-        "'Canus' beyazımsı gri veya kırçıllı anlamına gelir. "
-        "'Cana' dişil biçimidir.",
+        "'Canus' beyazımsı gri veya kırçıllı anlamına gelir."
     ),
     (
         "Micans",
@@ -561,7 +497,7 @@ RAW_QUESTIONS = [
         ["Kül grisi", "Parıldayan veya ışıltılı", "Soluk", "Siyah"],
         "Botanik betimleme terimi",
         "Parlak yüzey",
-        "'Micans' parıldayan veya ışıldayan anlamına gelir.",
+        "'Micans' parıldayan veya ışıldayan anlamına gelir."
     ),
     (
         "Clarus",
@@ -569,7 +505,7 @@ RAW_QUESTIONS = [
         ["Açık, berrak veya parlak", "Siyah", "Koyu kahverengi", "Kırmızı"],
         "Botanik betimleme terimi",
         "Açık renk",
-        "'Clarus' açık, berrak veya parlak anlamına gelir.",
+        "'Clarus' açık, berrak veya parlak anlamına gelir."
     ),
     (
         "Opacus",
@@ -577,7 +513,7 @@ RAW_QUESTIONS = [
         ["Parlak", "Mat veya donuk", "Gümüş", "Kızıl"],
         "Botanik betimleme terimi",
         "Mat yüzey",
-        "'Opacus' mat veya donuk anlamına gelir.",
+        "'Opacus' mat veya donuk anlamına gelir."
     ),
     (
         "Fulvus",
@@ -585,16 +521,15 @@ RAW_QUESTIONS = [
         ["Mavi", "Siyah", "Mor", "Sarımsı kahverengi"],
         "Botanik betimleme terimi",
         "Sarımsı kahverengi",
-        "'Fulvus' sarımsı kahverengi tonları ifade eder.",
+        "'Fulvus' sarımsı kahverengi tonları ifade eder."
     ),
     (
         "Fuscus",
         "Koyu kahverengi veya esmer",
-        ["Açık mavi", "Koyu kahverengi veya esmer",
-         "Kar beyazı", "Parlak pembe"],
+        ["Açık mavi", "Koyu kahverengi veya esmer", "Kar beyazı", "Parlak pembe"],
         "Botanik betimleme terimi",
         "Koyu renk",
-        "'Fuscus' koyu veya esmer anlamına gelir.",
+        "'Fuscus' koyu veya esmer anlamına gelir."
     ),
     (
         "Pallens",
@@ -602,7 +537,7 @@ RAW_QUESTIONS = [
         ["Çok koyu", "Altın rengi", "Soluk veya solgun", "Bakır rengi"],
         "Botanik betimleme terimi",
         "Soluk renk",
-        "'Pallens' soluk veya solgun anlamına gelir.",
+        "'Pallens' soluk veya solgun anlamına gelir."
     ),
     (
         "Albicans",
@@ -610,7 +545,7 @@ RAW_QUESTIONS = [
         ["Siyahımsı", "Sarımsı", "Beyazımsı veya beyazlaşan", "Kızılımsı"],
         "Botanik betimleme terimi",
         "Beyazımsı yüzey",
-        "'Albicans' beyazımsı veya beyazlaşan anlamına gelir.",
+        "'Albicans' beyazımsı veya beyazlaşan anlamına gelir."
     ),
     (
         "Lividus",
@@ -618,14 +553,13 @@ RAW_QUESTIONS = [
         ["Altın sarısı", "Kurşuni veya mavimsi gri", "Pembe", "Yeşil"],
         "Helleborus lividus",
         "Mavimsi çöpleme",
-        "'Lividus' kurşuni, mavimsi gri veya soluk mor "
-        "tonları ifade eder.",
+        "'Lividus' kurşuni, mavimsi gri veya soluk mor tonları ifade eder."
     ),
 ]
 
 
 # ============================================================
-# 4. SORU HAVUZUNU DOĞRULAMA
+# 4. SORU HAVUZUNU GÜVENLİ HAZIRLA
 # ============================================================
 
 def build_question_pool():
@@ -647,21 +581,19 @@ def build_question_pool():
         if latin.casefold() in seen:
             continue
 
-        seen.add(latin.casefold())
-
-        clean_options = list(
-            dict.fromkeys(
-                str(option).strip()
-                for option in options
-                if option is not None and str(option).strip()
-            )
-        )
+        clean_options = list(dict.fromkeys(
+            str(option).strip()
+            for option in options
+            if option is not None and str(option).strip()
+        ))
 
         if answer not in clean_options:
             clean_options.append(answer)
 
         if len(clean_options) < 4:
             continue
+
+        seen.add(latin.casefold())
 
         result.append({
             "latin": latin,
@@ -683,21 +615,128 @@ QUESTIONS = build_question_pool()
 
 
 # ============================================================
-# 5. OTURUM DURUMU
+# 5. SQLITE VERİTABANI
+# ============================================================
+
+def get_connection():
+    return sqlite3.connect(DB_PATH, timeout=15)
+
+
+def init_database():
+    with get_connection() as conn:
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS results (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id TEXT UNIQUE NOT NULL,
+                student TEXT NOT NULL,
+                student_no TEXT NOT NULL,
+                correct INTEGER NOT NULL,
+                total INTEGER NOT NULL,
+                percentage REAL NOT NULL,
+                duration REAL NOT NULL,
+                completed_at TEXT NOT NULL
+            )
+        """)
+
+        conn.commit()
+
+
+def save_result():
+    run_id = st.session_state.get("run_id")
+
+    if not run_id:
+        return
+
+    if st.session_state.get("submitted_run_id") == run_id:
+        return
+
+    questions = st.session_state.get("quiz_questions", [])
+
+    if not questions:
+        return
+
+    started = st.session_state.get("start_time")
+
+    elapsed = (
+        max(0, round(time.time() - started, 2))
+        if started is not None
+        else 0.0
+    )
+
+    correct = int(st.session_state.get("score", 0))
+    total = len(questions)
+    percentage = round(correct / total * 100, 2)
+
+    with get_connection() as conn:
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO results (
+                run_id,
+                student,
+                student_no,
+                correct,
+                total,
+                percentage,
+                duration,
+                completed_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now', 'localtime'))
+            """,
+            (
+                run_id,
+                st.session_state.get("name", ""),
+                st.session_state.get("student_no", ""),
+                correct,
+                total,
+                percentage,
+                elapsed,
+            ),
+        )
+        conn.commit()
+
+    st.session_state.elapsed_time = elapsed
+    st.session_state.submitted_run_id = run_id
+
+
+def load_results():
+    with get_connection() as conn:
+        return pd.read_sql_query(
+            """
+            SELECT
+                student AS 'Öğrenci',
+                student_no AS 'Öğrenci No',
+                correct AS 'Doğru',
+                total AS 'Toplam Soru',
+                percentage AS 'Başarı (%)',
+                ROUND(duration, 1) AS 'Süre (sn)',
+                completed_at AS 'Tamamlanma'
+            FROM results
+            ORDER BY percentage DESC, correct DESC, duration ASC
+            """,
+            conn,
+        )
+
+
+init_database()
+
+
+# ============================================================
+# 6. OTURUM DURUMU
 # ============================================================
 
 DEFAULTS = {
     "stage": "register",
     "name": "",
+    "student_no": "",
     "score": 0,
     "start_time": None,
     "elapsed_time": 0.0,
     "quiz_questions": [],
     "current_question": 0,
     "answers": [],
-    "leaderboard": [],
     "run_id": None,
     "submitted_run_id": None,
+    "feedback_index": None,
 }
 
 for key, value in DEFAULTS.items():
@@ -710,7 +749,7 @@ for key, value in DEFAULTS.items():
 
 
 # ============================================================
-# 6. YARDIMCI FONKSİYONLAR
+# 7. YARDIMCILAR
 # ============================================================
 
 def safe_text(value):
@@ -730,7 +769,7 @@ def format_seconds(seconds):
 def metric_card(label, value):
     st.markdown(
         f"""
-        <div class="metric-card">
+        <div class="metric">
             <div class="metric-label">{safe_text(label)}</div>
             <div class="metric-value">{safe_text(value)}</div>
         </div>
@@ -744,50 +783,49 @@ def make_balanced_questions(count):
         raise ValueError("Soru havuzu boş.")
 
     count = max(1, min(int(count), len(QUESTIONS)))
-
-    source = QUESTIONS.copy()
-    random.shuffle(source)
-    selected = source[:count]
-
-    all_answers = list(dict.fromkeys(
-        question["answer"] for question in QUESTIONS
-    ))
+    selected = random.sample(QUESTIONS, count)
 
     prepared = []
 
-    for question in selected:
-        correct_answer = question["answer"]
+    for q in selected:
+        correct = q["answer"]
 
         distractors = [
-            option
-            for option in question["options"]
-            if option != correct_answer
+            option for option in q["options"]
+            if option != correct
         ]
 
         random.shuffle(distractors)
 
-        for answer in all_answers:
-            if answer != correct_answer and answer not in distractors:
-                distractors.append(answer)
-
-            if len(distractors) >= 3:
-                break
-
         if len(distractors) < 3:
+            other_answers = list(dict.fromkeys(
+                x["answer"]
+                for x in QUESTIONS
+                if x["answer"] != correct
+            ))
+
+            random.shuffle(other_answers)
+
+            for candidate in other_answers:
+                if candidate not in distractors:
+                    distractors.append(candidate)
+
+                if len(distractors) >= 3:
+                    break
+
+        options = list(dict.fromkeys(
+            [correct] + distractors[:3]
+        ))
+
+        if len(options) < 4:
             continue
 
-        options = [correct_answer] + distractors[:3]
-        options = list(dict.fromkeys(options))
-
-        if len(options) != 4:
-            continue
-
+        options = options[:4]
         random.shuffle(options)
 
-        prepared_question = question.copy()
-        prepared_question["options"] = options
-
-        prepared.append(prepared_question)
+        item = q.copy()
+        item["options"] = options
+        prepared.append(item)
 
     if not prepared:
         raise ValueError("Geçerli soru oluşturulamadı.")
@@ -795,17 +833,13 @@ def make_balanced_questions(count):
     return prepared
 
 
-def start_quiz(name, count):
-    name = str(name).strip()
-
-    if not name:
-        raise ValueError("Lütfen bir ad veya takma ad gir.")
-
+def start_quiz(name, student_no, count):
     questions = make_balanced_questions(count)
 
     st.session_state.update({
         "stage": "quiz",
-        "name": name,
+        "name": name.strip(),
+        "student_no": student_no.strip(),
         "score": 0,
         "start_time": time.time(),
         "elapsed_time": 0.0,
@@ -814,48 +848,11 @@ def start_quiz(name, count):
         "answers": [],
         "run_id": str(uuid.uuid4()),
         "submitted_run_id": None,
+        "feedback_index": None,
     })
 
 
-def save_result():
-    run_id = st.session_state.run_id
-
-    if not run_id:
-        return
-
-    if st.session_state.submitted_run_id == run_id:
-        return
-
-    questions = st.session_state.quiz_questions
-
-    if not questions:
-        return
-
-    start_time = st.session_state.start_time
-
-    elapsed = (
-        round(time.time() - start_time, 2)
-        if start_time is not None
-        else 0.0
-    )
-
-    st.session_state.elapsed_time = elapsed
-
-    st.session_state.leaderboard.append({
-        "İsim": st.session_state.name,
-        "Doğru Sayısı": st.session_state.score,
-        "Toplam Soru": len(questions),
-        "Başarı (%)": round(
-            st.session_state.score / len(questions) * 100,
-            1,
-        ),
-        "Süre (sn)": elapsed,
-    })
-
-    st.session_state.submitted_run_id = run_id
-
-
-def reset_quiz(clear_name=False):
+def reset_quiz(clear_identity=False):
     st.session_state.update({
         "stage": "register",
         "score": 0,
@@ -866,61 +863,38 @@ def reset_quiz(clear_name=False):
         "answers": [],
         "run_id": None,
         "submitted_run_id": None,
+        "feedback_index": None,
     })
 
-    if clear_name:
+    if clear_identity:
         st.session_state.name = ""
-
-
-def render_leaderboard():
-    records = st.session_state.leaderboard
-
-    if not records:
-        st.info(
-            "🌱 Henüz sonuç kaydedilmedi. "
-            "İlk testi tamamlayarak liderlik tablosunu oluşturabilirsin."
-        )
-        return
-
-    df = pd.DataFrame(records)
-
-    df = df.sort_values(
-        by=["Başarı (%)", "Doğru Sayısı", "Süre (sn)"],
-        ascending=[False, False, True],
-    ).reset_index(drop=True)
-
-    df.index = df.index + 1
-    df.index.name = "Sıra"
-
-    st.dataframe(
-        df,
-        use_container_width=True,
-    )
+        st.session_state.student_no = ""
 
 
 # ============================================================
-# 7. BAŞLIK
+# 8. BAŞLIK
 # ============================================================
 
 def render_header():
     st.markdown(
         """
         <div class="hero">
-            <div class="eyebrow">🌿 BOTANICA AKADEMİ</div>
+            <div style="
+                color:#7df0b8;
+                font-weight:850;
+                letter-spacing:.15em;
+                font-size:.78rem;
+            ">
+                🌿 BOTANICA AKADEMİ
+            </div>
 
             <h1>Doğanın Dilini Keşfet.</h1>
 
             <p>
                 Latince botanik terimlerini öğren,
-                renklerin ardındaki anlamları keşfet
-                ve bilgini test et.
+                renklerin ve bitki özelliklerinin anlamlarını
+                keşfet, bilgini sınavla ölç.
             </p>
-
-            <div class="hero-badges">
-                <span class="badge">🌱 Botanik</span>
-                <span class="badge">📚 Latince</span>
-                <span class="badge">🎯 Bilgi Yarışması</span>
-            </div>
         </div>
         """,
         unsafe_allow_html=True,
@@ -928,13 +902,13 @@ def render_header():
 
 
 # ============================================================
-# 8. KAYIT EKRANI
+# 9. ÖĞRENCİ GİRİŞİ
 # ============================================================
 
 def render_register():
     render_header()
 
-    st.subheader("🌱 Yeni Bir Keşfe Başla")
+    st.subheader("🌱 Öğrenci Sınav Girişi")
 
     col1, col2, col3 = st.columns(3)
 
@@ -942,47 +916,46 @@ def render_register():
         metric_card("Soru havuzu", len(QUESTIONS))
 
     with col2:
-        metric_card("Cevap seçeneği", "4")
+        metric_card("Seçenek", "4")
 
     with col3:
-        metric_card("Kategori", "Botanik")
+        metric_card("Sınav türü", "Botanik")
 
-    st.markdown(
-        '<div class="panel">',
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="panel">', unsafe_allow_html=True)
 
     with st.form("register_form"):
         name = st.text_input(
-            "Adın veya takma adın",
+            "Ad soyad",
             value=st.session_state.name,
-            placeholder="Örn. Botanica",
-            max_chars=50,
+            max_chars=70,
+            placeholder="Örn. Ayşe Yılmaz",
+        )
+
+        student_no = st.text_input(
+            "Öğrenci numarası",
+            value=st.session_state.student_no,
+            max_chars=40,
+            placeholder="Örn. 2026001",
         )
 
         maximum = len(QUESTIONS)
 
-        count_options = sorted({
-            n
-            for n in [5, 10, 15, 20, 30, 40, 50, 60, maximum]
+        count_options = [
+            n for n in [5, 10, 15, 20, 30, 40, maximum]
             if 1 <= n <= maximum
-        })
+        ]
 
-        if not count_options:
-            st.error("Test oluşturmak için yeterli soru bulunamadı.")
-            st.stop()
-
-        default_count = min(10, maximum)
+        count_options = sorted(set(count_options))
 
         selected_count = st.selectbox(
-            "Test uzunluğu",
+            "Soru sayısı",
             options=count_options,
-            index=count_options.index(default_count),
+            index=count_options.index(min(10, maximum)),
             format_func=lambda n: f"{n} soru",
         )
 
         submitted = st.form_submit_button(
-            "Keşfe Başla 🚀",
+            "Sınava Başla 🚀",
             use_container_width=True,
             type="primary",
         )
@@ -991,33 +964,32 @@ def render_register():
 
     if submitted:
         if not name.strip():
-            st.warning("Lütfen adını veya bir takma ad gir.")
+            st.error("Ad soyad alanını doldur.")
+
+        elif not student_no.strip():
+            st.error("Öğrenci numarasını doldur.")
+
         else:
             try:
-                start_quiz(name, selected_count)
+                start_quiz(name, student_no, selected_count)
                 st.rerun()
+
             except (ValueError, TypeError, KeyError) as exc:
-                st.error(f"Test başlatılamadı: {exc}")
+                st.error(f"Sınav başlatılamadı: {exc}")
 
-    st.divider()
-
-    st.subheader("🏆 Liderlik Tablosu")
-    render_leaderboard()
-
-    with st.expander("📖 Nasıl oynanır?"):
+    with st.expander("📖 Sınav hakkında"):
         st.markdown(
             """
-            1. Adını veya takma adını yaz.
-            2. Test uzunluğunu seç.
-            3. Latince terimin anlamını bul.
-            4. Cevap açıklamalarını oku.
-            5. Sonuçlarını ve başarı oranını incele.
+            - Her soruda yalnızca bir seçenek işaretlenir.
+            - Cevabını onayladıktan sonra sonraki soruya geçersin.
+            - Cevaplar sınav sonunda puanlanır.
+            - Sonuçlar uygulamanın SQLite veritabanına kaydedilir.
             """
         )
 
 
 # ============================================================
-# 9. TEST EKRANI
+# 10. SINAV
 # ============================================================
 
 def render_quiz():
@@ -1025,13 +997,16 @@ def render_quiz():
     index = st.session_state.current_question
 
     if not questions:
-        st.error("Soru bulunamadı. Yeni bir test başlat.")
-        if st.button("Ana Sayfaya Dön"):
+        st.error("Sınav soruları bulunamadı.")
+
+        if st.button("Ana sayfaya dön"):
             reset_quiz()
             st.rerun()
+
         return
 
-    if index < 0 or index >= len(questions):
+    if index >= len(questions):
+        save_result()
         st.session_state.stage = "result"
         st.rerun()
         return
@@ -1046,47 +1021,51 @@ def render_quiz():
         st.caption(f"Soru {index + 1} / {len(questions)}")
 
     with col2:
-        st.caption(f"Puan: {st.session_state.score}")
+        st.caption(f"Öğrenci: {st.session_state.name}")
 
     st.markdown(
         f"""
         <div class="panel">
-            <div class="eyebrow">BOTANİK TERİM</div>
+            <div style="
+                opacity:.7;
+                font-size:.8rem;
+                font-weight:800;
+                letter-spacing:.12em;
+            ">
+                LATİNCE BOTANİK
+            </div>
+
             <div class="latin">{safe_text(q['latin'])}</div>
+
             <p>{safe_text(q['question'])}</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    form_key = f"quiz_form_{st.session_state.run_id}_{index}"
+    form_key = f"form_{st.session_state.run_id}_{index}"
 
     with st.form(form_key):
         selected = st.radio(
             "Cevabını seç:",
             options=q["options"],
             index=None,
-            key=f"answer_{st.session_state.run_id}_{index}",
+            key=f"choice_{st.session_state.run_id}_{index}",
         )
 
         submitted = st.form_submit_button(
-            "Cevabı Kontrol Et ✨",
+            "Cevabı Onayla",
             use_container_width=True,
             type="primary",
         )
 
     if submitted:
         if selected is None:
-            st.warning("Lütfen bir cevap seç.")
+            st.warning("Devam etmeden önce bir seçenek işaretle.")
             return
 
-        # Aynı sorunun birden fazla kez puanlanmasını engelle.
-        already_answered = (
-            len(st.session_state.answers) > index
-        )
-
-        if already_answered:
-            st.warning("Bu soruyu zaten cevapladın.")
+        if len(st.session_state.answers) > index:
+            st.warning("Bu soru daha önce cevaplanmış.")
             return
 
         is_correct = selected == q["answer"]
@@ -1096,7 +1075,6 @@ def render_quiz():
 
         st.session_state.answers.append({
             "latin": q["latin"],
-            "question": q["question"],
             "selected": selected,
             "correct": q["answer"],
             "is_correct": is_correct,
@@ -1105,61 +1083,42 @@ def render_quiz():
             "explanation": q["explanation"],
         })
 
+        st.session_state.feedback_index = index
         st.session_state.stage = "feedback"
         st.rerun()
 
 
 # ============================================================
-# 10. CEVAP VE AÇIKLAMA EKRANI
+# 11. CEVAP SONRASI BİLGİLENDİRME
 # ============================================================
 
 def render_feedback():
     answers = st.session_state.answers
+    index = st.session_state.feedback_index
 
-    if not answers:
+    if index is None or index >= len(answers):
         st.session_state.stage = "quiz"
         st.rerun()
         return
 
-    answer = answers[-1]
+    answer = answers[index]
 
     if answer["is_correct"]:
-        st.success("🎉 Harika! Doğru cevap.")
+        st.success("🎉 Doğru cevap!")
     else:
-        st.error(
-            f"Yanlış cevap. Doğru cevap: {answer['correct']}"
-        )
+        st.error("Yanlış cevap.")
 
-    st.markdown(
-        f"""
-        <div class="panel">
-            <div class="eyebrow">BOTANİK BİLGİSİ</div>
-
-            <div style="
-                font-size: 1.25rem;
-                font-weight: 850;
-                font-style: italic;
-            ">
-                🌿 {safe_text(answer['plant'])}
-            </div>
-
-            <p style="opacity: .75;">
-                {safe_text(answer['plant_name'])}
-            </p>
-
-            <p style="line-height: 1.8;">
-                {safe_text(answer['explanation'])}
-            </p>
-        </div>
-        """,
-        unsafe_allow_html=True,
+    # Sınav sırasında doğru yanıtı açıklamıyoruz.
+    # Böylece sonraki sorularda cevaplar hakkında ipucu verilmez.
+    st.info(
+        "Cevap açıklamaları ve doğru yanıtlar sınav bitiminde gösterilecektir."
     )
 
     current = st.session_state.current_question
     total = len(st.session_state.quiz_questions)
 
     label = (
-        "Sonuçları Gör 🏆"
+        "Sınavı Bitir ve Sonuçları Gör 🏆"
         if current + 1 >= total
         else "Sonraki Soru ➡️"
     )
@@ -1180,7 +1139,7 @@ def render_feedback():
 
 
 # ============================================================
-# 11. SONUÇ EKRANI
+# 12. SONUÇLAR
 # ============================================================
 
 def render_result():
@@ -1189,13 +1148,15 @@ def render_result():
     score = st.session_state.score
 
     if total == 0:
-        st.warning("Gösterilecek test sonucu bulunamadı.")
+        st.warning("Sınav sonucu bulunamadı.")
 
-        if st.button("Ana Sayfaya Dön"):
+        if st.button("Ana sayfaya dön"):
             reset_quiz()
             st.rerun()
 
         return
+
+    save_result()
 
     percentage = score / total * 100
 
@@ -1205,22 +1166,28 @@ def render_result():
     st.markdown(
         f"""
         <div class="hero">
-            <div class="eyebrow">QUIZ TAMAMLANDI 🌿</div>
+            <div style="
+                color:#7df0b8;
+                font-weight:850;
+                letter-spacing:.12em;
+            ">
+                SINAV TAMAMLANDI
+            </div>
 
             <div style="
-                font-size: clamp(3rem, 10vw, 4.5rem);
-                font-weight: 900;
-                margin: .5rem 0;
+                font-size:clamp(3rem,10vw,4.5rem);
+                font-weight:900;
+                margin:.5rem 0;
             ">
                 {score} / {total}
             </div>
 
-            <h2 style="color: white;">
-                Başarı oranı: %{percentage:.0f}
+            <h2 style="color:white;">
+                Başarı oranı: %{percentage:.1f}
             </h2>
 
             <p>
-                Tamamlanma süresi:
+                Süre:
                 <strong>
                     {safe_text(format_seconds(
                         st.session_state.elapsed_time
@@ -1235,98 +1202,148 @@ def render_result():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        metric_card("Doğru cevap", score)
+        metric_card("Doğru", score)
 
     with col2:
-        metric_card("Yanlış cevap", total - score)
+        metric_card("Yanlış", total - score)
 
     with col3:
-        metric_card("Başarı", f"%{percentage:.0f}")
+        metric_card("Başarı", f"%{percentage:.1f}")
 
-    if percentage >= 80:
-        st.success(
-            "🏆 Mükemmel! Botanik renk bilgine hâkim görünüyorsun."
-        )
-    elif percentage >= 50:
-        st.info(
-            "🌱 Güzel iş! Birkaç tekrar ile daha da ilerleyebilirsin."
-        )
-    else:
-        st.warning(
-            "📚 Yeni bir turla bilgilerini geliştirebilirsin."
-        )
+    st.subheader("📝 Cevaplarını İncele")
 
-    st.subheader("🏆 Liderlik Tablosu")
-    render_leaderboard()
-
-    st.divider()
-
-    with st.expander("📝 Cevaplarını İncele"):
-        for i, answer in enumerate(
-            st.session_state.answers,
-            start=1,
+    for i, answer in enumerate(st.session_state.answers, start=1):
+        with st.expander(
+            f"{i}. {answer['latin']} — "
+            f"{'✅ Doğru' if answer['is_correct'] else '❌ Yanlış'}"
         ):
-            status = (
-                "✅ Doğru"
-                if answer["is_correct"]
-                else "❌ Yanlış"
-            )
-
-            st.markdown(
-                f"**{i}. {answer['latin']} — {status}**"
-            )
-
             st.write(f"Verdiğin cevap: {answer['selected']}")
             st.write(f"Doğru cevap: {answer['correct']}")
 
-            st.caption(
-                f"{answer['plant']} — {answer['plant_name']}"
+            st.markdown(
+                f"**{safe_text(answer['plant'])}**"
+                f" — {safe_text(answer['plant_name'])}",
+                unsafe_allow_html=True,
             )
 
             st.write(answer["explanation"])
-            st.divider()
 
-    col1, col2 = st.columns(2)
+    st.divider()
 
-    with col1:
-        if st.button(
-            "Tekrar Oyna 🔄",
-            use_container_width=True,
-        ):
-            reset_quiz()
-            st.rerun()
+    if st.button(
+        "Yeni Sınava Başla 🔄",
+        use_container_width=True,
+        type="primary",
+    ):
+        reset_quiz()
+        st.rerun()
 
-    with col2:
-        if st.button(
-            "Ana Sayfaya Dön 🏠",
-            use_container_width=True,
-        ):
-            reset_quiz(clear_name=True)
-            st.rerun()
+    if st.button(
+        "Ana sayfaya dön",
+        use_container_width=True,
+    ):
+        reset_quiz(clear_identity=True)
+        st.rerun()
 
 
 # ============================================================
-# 12. ANA UYGULAMA
+# 13. ÖĞRETMEN PANELİ
+# ============================================================
+
+def render_teacher():
+    st.markdown(
+        """
+        <div class="hero">
+            <div class="eyebrow">ÖĞRETMEN PANELİ</div>
+            <h1>Sınav Sonuçları</h1>
+            <p>
+                Tamamlanan sınavları görüntüle ve sonuçları CSV
+                dosyası olarak indir.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    password = st.text_input(
+        "Öğretmen şifresi",
+        type="password",
+        key="teacher_password",
+    )
+
+    # Üretim ortamında bu değeri ortam değişkeninden al.
+    expected_password = __import__("os").environ.get(
+        "BOTANICA_TEACHER_PASSWORD",
+        "",
+    )
+
+    if not expected_password:
+        st.warning(
+            "Öğretmen paneli etkin değil. "
+            "BOTANICA_TEACHER_PASSWORD ortam değişkenini ayarla."
+        )
+        return
+
+    if password != expected_password:
+        st.info("Sonuçları görmek için öğretmen şifresini gir.")
+        return
+
+    df = load_results()
+
+    st.metric("Tamamlanan sınav", len(df))
+
+    if df.empty:
+        st.info("Henüz tamamlanmış sınav yok.")
+        return
+
+    st.dataframe(
+        df,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    csv_data = df.to_csv(index=False).encode("utf-8-sig")
+
+    st.download_button(
+        "Sonuçları CSV olarak indir 📥",
+        data=csv_data,
+        file_name="botanica_sinav_sonuclari.csv",
+        mime="text/csv",
+        use_container_width=True,
+    )
+
+
+# ============================================================
+# 14. UYGULAMA YÖNLENDİRME
 # ============================================================
 
 if not QUESTIONS:
-    st.error(
-        "Soru havuzu yüklenemedi. "
-        "RAW_QUESTIONS listesini kontrol et."
-    )
-
-elif st.session_state.stage == "register":
-    render_register()
-
-elif st.session_state.stage == "quiz":
-    render_quiz()
-
-elif st.session_state.stage == "feedback":
-    render_feedback()
-
-elif st.session_state.stage == "result":
-    render_result()
+    st.error("Soru havuzu boş veya geçersiz.")
 
 else:
-    st.session_state.stage = "register"
-    st.rerun()
+    with st.sidebar:
+        st.markdown("### 🌿 Botanica Akademi")
+
+        page = st.radio(
+            "Sayfa",
+            ["Öğrenci Sınavı", "Öğretmen Paneli"],
+        )
+
+    if page == "Öğretmen Paneli":
+        render_teacher()
+
+    elif st.session_state.stage == "register":
+        render_register()
+
+    elif st.session_state.stage == "quiz":
+        render_quiz()
+
+    elif st.session_state.stage == "feedback":
+        render_feedback()
+
+    elif st.session_state.stage == "result":
+        render_result()
+
+    else:
+        reset_quiz()
+        st.rerun()
