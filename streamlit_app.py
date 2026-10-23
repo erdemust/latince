@@ -1,13 +1,11 @@
 import streamlit as st
 import pandas as pd
-import random
-import csv
 from io import StringIO
 
 st.set_page_config(
     page_title="Botanik Latince Öğrenme",
     page_icon="🌿",
-    layout="centered"
+    layout="wide"
 )
 
 st.title("🌿 Botanik Latince Öğrenme")
@@ -15,8 +13,35 @@ st.write("Latince bitki terimlerini öğren, bilgini test et!")
 
 st.divider()
 
-# Gerekli sütunlar
-REQUIRED_COLUMNS = [
+# CSV dosyasını yükle
+uploaded_file = st.file_uploader(
+    "📂 CSV dosyanızı yükleyin",
+    type=["csv"]
+)
+
+# CSV dosyasını oku
+if uploaded_file is not None:
+    try:
+        df = pd.read_csv(
+            uploaded_file,
+            encoding="utf-8-sig"
+        )
+    except UnicodeDecodeError:
+        uploaded_file.seek(0)
+        df = pd.read_csv(
+            uploaded_file,
+            encoding="latin-1"
+        )
+    except Exception as e:
+        st.error(f"CSV dosyası okunamadı: {e}")
+        st.stop()
+
+else:
+    st.info("Lütfen botanical_terms.csv dosyasını yükleyin.")
+    st.stop()
+
+# Gerekli sütunları kontrol et
+required_columns = [
     "latin",
     "answer",
     "options",
@@ -25,312 +50,163 @@ REQUIRED_COLUMNS = [
     "explanation"
 ]
 
+missing_columns = [
+    column
+    for column in required_columns
+    if column not in df.columns
+]
 
-def read_csv_file(uploaded_file):
-    """CSV dosyasını farklı kodlamalar ve ayraçlarla okumayı dener."""
+if missing_columns:
+    st.error(
+        "CSV dosyasında eksik sütunlar var: "
+        + ", ".join(missing_columns)
+    )
+    st.stop()
 
-    file_bytes = uploaded_file.getvalue()
+# Boş satırları temizle
+df = df.dropna(subset=["latin", "answer"])
 
-    encodings = [
-        "utf-8-sig",
-        "utf-8",
-        "cp1254",
-        "iso-8859-9",
-        "latin1"
-    ]
+# Sayısal özetler
+col1, col2, col3 = st.columns(3)
 
-    errors = []
+with col1:
+    st.metric("Toplam Terim", len(df))
 
-    for encoding in encodings:
-        try:
-            text = file_bytes.decode(encoding)
+with col2:
+    st.metric("Farklı Bitki", df["plant"].nunique())
 
-            # Ayraç karakterini belirle
-            try:
-                dialect = csv.Sniffer().sniff(
-                    text[:10000],
-                    delimiters=",;\t|"
-                )
-                separator = dialect.delimiter
-            except csv.Error:
-                separator = ","
+with col3:
+    st.metric("Açıklamalar", df["explanation"].notna().sum())
 
-            df = pd.read_csv(
-                StringIO(text),
-                sep=separator,
-                dtype=str,
-                keep_default_na=False,
-                on_bad_lines="error"
-            )
+st.divider()
 
-            # Sütun adlarını temizle
-            df.columns = [
-                str(col).strip().replace("\ufeff", "")
-                for col in df.columns
-            ]
+# Arama alanı
+st.subheader("🔎 Terim Ara")
 
-            # Sütun adlarında olası boşlukları temizle
-            df.columns = [
-                col.lower() for col in df.columns
-            ]
-
-            missing = [
-                col for col in REQUIRED_COLUMNS
-                if col not in df.columns
-            ]
-
-            if missing:
-                errors.append(
-                    f"{encoding}: Eksik sütunlar: {missing}"
-                )
-                continue
-
-            # Tamamen boş satırları kaldır
-            df = df.dropna(how="all")
-
-            # Boşlukları temizle
-            for col in REQUIRED_COLUMNS:
-                df[col] = df[col].astype(str).str.strip()
-
-            # Latince kelimesi veya cevabı boş olan satırları kaldır
-            df = df[
-                (df["latin"] != "") &
-                (df["answer"] != "")
-            ].reset_index(drop=True)
-
-            if df.empty:
-                errors.append(
-                    f"{encoding}: Kullanılabilir veri bulunamadı."
-                )
-                continue
-
-            return df, None
-
-        except Exception as e:
-            errors.append(f"{encoding}: {str(e)}")
-
-    return None, "\n".join(errors)
-
-
-# CSV yükleme
-uploaded_file = st.file_uploader(
-    "📂 CSV dosyanızı yükleyin",
-    type=["csv"]
+search = st.text_input(
+    "Latince terim, Türkçe anlam veya bitki adı yazın"
 )
 
-if uploaded_file is not None:
+filtered_df = df.copy()
 
-    df, error = read_csv_file(uploaded_file)
-
-    if error:
-        st.error("CSV dosyası okunamadı.")
-        with st.expander("Hata ayrıntılarını göster"):
-            st.code(error)
-
-        st.info(
-            "Dosyanın ilk satırında latin, answer, options, "
-            "plant, plant_name ve explanation sütunları "
-            "bulunmalıdır."
+if search:
+    mask = filtered_df[
+        [
+            "latin",
+            "answer",
+            "plant",
+            "plant_name",
+            "explanation"
+        ]
+    ].fillna("").astype(str).apply(
+        lambda column: column.str.contains(
+            search,
+            case=False,
+            regex=False
         )
+    ).any(axis=1)
 
-        st.stop()
+    filtered_df = filtered_df[mask]
 
-    st.success(
-        f"✅ CSV başarıyla yüklendi! "
-        f"{len(df)} terim bulundu."
+st.caption(f"{len(filtered_df)} kayıt bulundu.")
+
+# Görüntülenecek sütunlar
+display_columns = [
+    "latin",
+    "answer",
+    "options",
+    "plant",
+    "plant_name",
+    "explanation"
+]
+
+# Tablo
+st.subheader("📚 Botanik Terimleri Tablosu")
+
+st.dataframe(
+    filtered_df[display_columns],
+    use_container_width=True,
+    hide_index=True,
+    column_config={
+        "latin": st.column_config.TextColumn(
+            "Latince Terim",
+            width="medium"
+        ),
+        "answer": st.column_config.TextColumn(
+            "Türkçe Anlam",
+            width="medium"
+        ),
+        "options": st.column_config.TextColumn(
+            "Seçenekler",
+            width="large"
+        ),
+        "plant": st.column_config.TextColumn(
+            "Bilimsel Bitki Adı",
+            width="medium"
+        ),
+        "plant_name": st.column_config.TextColumn(
+            "Bitkinin Türkçe Adı",
+            width="medium"
+        ),
+        "explanation": st.column_config.TextColumn(
+            "Açıklama",
+            width="large"
+        )
+    }
+)
+
+st.divider()
+
+# Terim ayrıntıları
+st.subheader("🌱 Terim Ayrıntıları")
+
+if not filtered_df.empty:
+    selected_term = st.selectbox(
+        "Bir Latince terim seçin",
+        filtered_df["latin"].tolist()
     )
 
-    # Oturum değişkenlerini başlat
-    if (
-        "quiz_data" not in st.session_state
-        or st.session_state.get("file_name") != uploaded_file.name
-    ):
-        st.session_state.quiz_data = df.to_dict("records")
-        st.session_state.file_name = uploaded_file.name
-        st.session_state.question_index = 0
-        st.session_state.score = 0
-        st.session_state.answered = False
-        st.session_state.used_questions = []
-        st.session_state.selected_option = None
+    selected_row = filtered_df[
+        filtered_df["latin"] == selected_term
+    ].iloc[0]
 
-    quiz_data = st.session_state.quiz_data
+    st.markdown(f"### {selected_row['latin']}")
 
-    if not quiz_data:
-        st.warning("CSV dosyasında soru bulunamadı.")
-        st.stop()
-
-    total_questions = len(quiz_data)
-
-    # İlerleme
-    progress = min(
-        st.session_state.question_index / total_questions,
-        1.0
-    )
-
-    st.progress(progress)
-
-    st.write(
-        f"**Soru:** "
-        f"{min(st.session_state.question_index + 1, total_questions)}"
-        f" / {total_questions}"
-    )
-
-    st.write(f"🏆 **Doğru cevap:** {st.session_state.score}")
-
-    # Tüm sorular tamamlandı mı?
-    if st.session_state.question_index >= total_questions:
-
-        st.balloons()
-        st.success("🎉 Test tamamlandı!")
-
-        st.subheader("Sonuçlar")
-
-        st.metric(
-            "Doğru cevap sayısı",
-            st.session_state.score
-        )
-
-        st.metric(
-            "Başarı oranı",
-            f"%{st.session_state.score / total_questions * 100:.1f}"
-        )
-
-        if st.button("🔄 Testi yeniden başlat"):
-            st.session_state.question_index = 0
-            st.session_state.score = 0
-            st.session_state.answered = False
-            st.session_state.used_questions = []
-            st.session_state.selected_option = None
-
-            random.shuffle(st.session_state.quiz_data)
-            st.rerun()
-
-        st.stop()
-
-    # Soruyu seç
-    current = quiz_data[st.session_state.question_index]
-
-    st.divider()
-
-    st.subheader("🌱 Bu Latince kelimenin Türkçe karşılığı nedir?")
+    st.success(f"**Anlamı:** {selected_row['answer']}")
 
     st.markdown(
-        f"<h2 style='text-align:center; color:#228B22;'>"
-        f"{current['latin']}</h2>",
-        unsafe_allow_html=True
+        f"**Bilimsel bitki adı:** "
+        f"{selected_row['plant']}"
     )
 
-    # Şıkları CSV içindeki options sütunundan al
-    options = [
-        option.strip()
-        for option in current["options"].split(",")
-        if option.strip()
-    ]
-
-    # Doğru cevap seçenekler arasında yoksa ekle
-    if current["answer"] not in options:
-        options.append(current["answer"])
-
-    # Seçeneklerin sırasını karıştır
-    if "options_question" not in st.session_state:
-        st.session_state.options_question = -1
-
-    if (
-        st.session_state.options_question
-        != st.session_state.question_index
-    ):
-        random.shuffle(options)
-        st.session_state.current_options = options
-        st.session_state.options_question = (
-            st.session_state.question_index
-        )
-
-    selected = st.radio(
-        "Doğru cevabı seç:",
-        st.session_state.current_options,
-        index=None,
-        key=f"answer_{st.session_state.question_index}",
-        disabled=st.session_state.answered
+    st.markdown(
+        f"**Türkçe bitki adı:** "
+        f"{selected_row['plant_name']}"
     )
 
-    # Cevabı kontrol et
-    if not st.session_state.answered:
-
-        if st.button("✅ Cevabı kontrol et", use_container_width=True):
-
-            if selected is None:
-                st.warning("Lütfen bir seçenek işaretleyin.")
-            else:
-                st.session_state.selected_option = selected
-                st.session_state.answered = True
-
-                if selected == current["answer"]:
-                    st.session_state.score += 1
-
-                st.rerun()
-
-    # Cevap sonrası bitki bilgilerini göster
-    if st.session_state.answered:
-
-        if (
-            st.session_state.selected_option
-            == current["answer"]
-        ):
-            st.success("🎉 Doğru cevap!")
-        else:
-            st.error(
-                f"❌ Yanlış cevap. Doğru cevap: "
-                f"{current['answer']}"
-            )
-
-        st.divider()
-
-        st.subheader("🌿 Örnek bitki")
-
-        st.markdown(
-            f"### {current['plant_name']}"
-        )
-
-        st.markdown(
-            f"**Bilimsel adı:** *{current['plant']}*"
-        )
-
-        st.markdown(
-            f"**Latince terim:** {current['latin']}"
-        )
-
-        st.markdown(
-            f"**Türkçe anlamı:** {current['answer']}"
-        )
-
-        st.subheader("📖 Açıklama")
-
-        st.write(current["explanation"])
-
-        if st.button(
-            "➡️ Sonraki soru",
-            use_container_width=True
-        ):
-            st.session_state.question_index += 1
-            st.session_state.answered = False
-            st.session_state.selected_option = None
-            st.rerun()
-
-else:
     st.info(
-        "Başlamak için botanical_terms.csv dosyanızı yükleyin."
+        f"**Açıklama:** {selected_row['explanation']}"
     )
 
     st.markdown(
-        """
-        ### 📚 Nasıl çalışır?
-
-        1. CSV dosyanızı yüklersiniz.
-        2. Ekranda bir Latince botanik terimi belirir.
-        3. Dört Türkçe seçenek arasından doğru anlamı seçersiniz.
-        4. Cevabınızı kontrol edersiniz.
-        5. Doğru cevapla birlikte örnek bitki, bilimsel adı
-           ve botanik açıklaması gösterilir.
-        6. Test sonunda başarı yüzdenizi görürsünüz.
-        """
+        f"**Cevap seçenekleri:** {selected_row['options']}"
     )
+else:
+    st.warning("Aramanızla eşleşen terim bulunamadı.")
+
+st.divider()
+
+# CSV indirme
+csv_data = filtered_df[display_columns].to_csv(
+    index=False,
+    encoding="utf-8-sig"
+)
+
+st.download_button(
+    label="⬇️ Filtrelenmiş tabloyu CSV olarak indir",
+    data=csv_data,
+    file_name="botanical_terms_filtered.csv",
+    mime="text/csv"
+)
+
+st.caption("🌿 Botanik Latince Öğrenme")
