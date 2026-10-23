@@ -1,6 +1,6 @@
+import html
 import random
 import time
-import html
 import uuid
 
 import pandas as pd
@@ -315,13 +315,6 @@ st.markdown(
 
 # ============================================================
 # 3. SORU HAVUZU
-#
-# Her soru:
-# latin, question, answer, options, plant, plant_name,
-# explanation alanlarını içerir.
-#
-# Doğru cevaplar oyuna başlarken A/B/C/D konumlarına
-# mümkün olduğunca dengeli dağıtılır.
 # ============================================================
 
 RAW_QUESTIONS = [
@@ -667,8 +660,6 @@ RAW_QUESTIONS = [
         "Çizgili görünümü anlatan sıfat",
         "'Striatus' çizgili anlamına gelir.",
     ),
-
-    # Ek renkler ve tonlar
     (
         "Azureus",
         "'Azureus' hangi rengi ifade eder?",
@@ -691,4 +682,696 @@ RAW_QUESTIONS = [
         "Lividus",
         "'Lividus' hangi renk tonunu ifade eder?",
         "Kurşuni veya mavimsi gri",
-        ["Altın sarısı", "Kurşuni veya mavimsi gri", "Pembe", "Ye
+        ["Altın sarısı", "Kurşuni veya mavimsi gri", "Pembe", "Yeşil"],
+        "Botanik renk sıfatı",
+        "Soğuk gri tonlarını anlatan sıfat",
+        "'Lividus' kurşuni veya mavimsi gri tonlarını ifade edebilir.",
+    ),
+    (
+        "Coloratus",
+        "'Coloratus' ne anlama gelir?",
+        "Renkli",
+        ["Renksiz", "Renkli", "Yalnızca beyaz", "Çizgili"],
+        "Botanik tanımlama sıfatı",
+        "Renkli görünümü anlatan sıfat",
+        "'Coloratus' renkli veya belirgin renge sahip anlamına gelir.",
+    ),
+    (
+        "Argentea",
+        "'Argentea' hangi rengi ifade eder?",
+        "Gümüş rengi",
+        ["Gümüş rengi", "Bakır", "Kızıl", "Sarı"],
+        "Salix alba",
+        "Ak söğüt",
+        "'Argentea', gümüşi anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Aureolus",
+        "'Aureolus' hangi renk tonunu ifade eder?",
+        "Altınsı",
+        ["Mavimsi", "Kül grisi", "Altınsı", "Siyah"],
+        "Botanik renk sıfatı",
+        "Yumuşak altın tonlarını anlatan sıfat",
+        "'Aureolus' altın renkli veya altınsı anlamına gelir.",
+    ),
+    (
+        "Piceus",
+        "'Piceus' hangi rengi ifade eder?",
+        "Zift siyahı",
+        ["Kar beyazı", "Zift siyahı", "Leylak", "Gümüş"],
+        "Botanik renk sıfatı",
+        "Çok koyu siyahı anlatan sıfat",
+        "'Piceus' zift gibi koyu veya siyah anlamına gelir.",
+    ),
+    (
+        "Nivea",
+        "'Nivea' hangi rengi ifade eder?",
+        "Kar beyazı",
+        ["Kızıl", "Yeşil", "Kar beyazı", "Bakır"],
+        "Galanthus nivalis",
+        "Kardelen",
+        "'Nivea', kar beyazı anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Fulva",
+        "'Fulva' hangi renk tonunu ifade eder?",
+        "Sarımsı kahverengi",
+        ["Sarımsı kahverengi", "Mavi", "Siyah", "Gümüş"],
+        "Botanik renk sıfatı",
+        "Sıcak toprak tonlarını anlatan sıfat",
+        "'Fulva', sarımsı kahverengi anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Cinerea",
+        "'Cinerea' hangi rengi ifade eder?",
+        "Kül grisi",
+        ["Pembe", "Kül grisi", "Altın sarısı", "Mor"],
+        "Eucalyptus cinerea",
+        "Gümüş dolar okaliptüsü",
+        "'Cinerea', kül grisi anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Rosea",
+        "'Rosea' hangi rengi ifade eder?",
+        "Pembe",
+        ["Kahverengi", "Siyah", "Pembe", "Mavi"],
+        "Rosa",
+        "Gül cinsi",
+        "'Rosea', pembe anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Rubra",
+        "'Rubra' hangi rengi ifade eder?",
+        "Kırmızı",
+        ["Gri", "Kırmızı", "Yeşil", "Sarı"],
+        "Rosa rubra",
+        "Kırmızı renk sıfatı içeren botanik ad",
+        "'Rubra', kırmızı anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Flava",
+        "'Flava' hangi rengi ifade eder?",
+        "Sarı",
+        ["Mavi", "Siyah", "Sarı", "Pembe"],
+        "Iris pseudacorus",
+        "Sarı süsen",
+        "'Flava', sarı anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Glauca",
+        "'Glauca' hangi renk tonunu ifade eder?",
+        "Mavimsi yeşil veya grimsi mavi",
+        ["Parlak turuncu", "Mavimsi yeşil veya grimsi mavi", "Siyah", "Pembe"],
+        "Eucalyptus cinerea",
+        "Gümüş dolar okaliptüsü",
+        "'Glauca', mavimsi yeşil veya grimsi mavi anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Sanguinea",
+        "'Sanguinea' hangi rengi ifade eder?",
+        "Kan kırmızısı",
+        ["Kan kırmızısı", "Soluk mavi", "Gümüş", "Yeşil"],
+        "Botanik renk sıfatı",
+        "Derin kırmızı tonlarını anlatan sıfat",
+        "'Sanguinea', kan kırmızısı anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Coccinea",
+        "'Coccinea' hangi rengi ifade eder?",
+        "Parlak kırmızı",
+        ["Kül grisi", "Mavimsi yeşil", "Parlak kırmızı", "Kahverengi"],
+        "Salvia coccinea",
+        "Kırmızı çiçekli adaçayı",
+        "'Coccinea', parlak kırmızı anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Purpurea",
+        "'Purpurea' hangi rengi ifade eder?",
+        "Mor veya erguvan",
+        ["Mavi", "Mor veya erguvan", "Yeşil", "Gümüş"],
+        "Echinacea purpurea",
+        "Mor ekinezya",
+        "'Purpurea', mor anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Violacea",
+        "'Violacea' hangi rengi ifade eder?",
+        "Menekşe moru",
+        ["Kahverengi", "Sarı", "Menekşe moru", "Beyaz"],
+        "Viola odorata",
+        "Kokulu menekşe",
+        "'Violacea', menekşe moru anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Lutea",
+        "'Lutea' hangi rengi ifade eder?",
+        "Sarı",
+        ["Sarı", "Mavi", "Siyah", "Gri"],
+        "Iris pseudacorus",
+        "Sarı süsen",
+        "'Lutea', sarı anlamındaki sıfatın dişil biçimidir.",
+    ),
+    (
+        "Viridescens",
+        "'Viridescens' hangi renk değişimini ifade eder?",
+        "Yeşile dönen",
+        ["Kızaran", "Yeşile dönen", "Beyazlaşan", "Kararan"],
+        "Botanik renk sıfatı",
+        "Yeşile dönen tonları anlatan sıfat",
+        "'Viridescens' yeşilimsi veya yeşile dönen anlamına gelir.",
+    ),
+    (
+        "Dilutus",
+        "'Dilutus' renk tanımında ne anlama gelir?",
+        "Açılmış veya seyrelmiş",
+        ["Çok koyu", "Açılmış veya seyrelmiş", "Parlak siyah", "Altın rengi"],
+        "Botanik renk sıfatı",
+        "Rengin açılmış olduğunu anlatan sıfat",
+        "'Dilutus' seyrelmiş veya daha açık hale gelmiş anlamına gelir.",
+    ),
+    (
+        "Clarus",
+        "'Clarus' renk tanımında hangi anlamı taşır?",
+        "Açık veya parlak",
+        ["Açık veya parlak", "Siyah", "Koyu kahverengi", "Kırmızı"],
+        "Botanik renk sıfatı",
+        "Açık ve parlak görünümü anlatan sıfat",
+        "'Clarus' açık, parlak veya belirgin anlamına gelebilir.",
+    ),
+    (
+        "Saturatus",
+        "'Saturatus' renk tanımında ne anlama gelir?",
+        "Doygun veya yoğun",
+        ["Soluk", "Doygun veya yoğun", "Renksiz", "Şeffaf"],
+        "Botanik renk sıfatı",
+        "Yoğun renkleri anlatan sıfat",
+        "'Saturatus' doygun veya yoğun anlamına gelir.",
+    ),
+    (
+        "Opacus",
+        "'Opacus' görünüm bakımından ne anlama gelir?",
+        "Mat veya donuk",
+        ["Parlak", "Mat veya donuk", "Gümüş", "Kızıl"],
+        "Botanik görünüm sıfatı",
+        "Mat yüzeyleri anlatan sıfat",
+        "'Opacus' mat, donuk veya ışığı geçirmeyen anlamına gelebilir.",
+    ),
+    (
+        "Micans",
+        "'Micans' hangi görünümü anlatır?",
+        "Parıldayan",
+        ["Kül grisi", "Parıldayan", "Soluk", "Siyah"],
+        "Botanik görünüm sıfatı",
+        "Işıltılı yüzeyleri anlatan sıfat",
+        "'Micans' parıldayan veya ışıldayan anlamına gelir.",
+    ),
+    (
+        "Subalbus",
+        "'Subalbus' hangi anlamı taşır?",
+        "Beyazımsı",
+        ["Kırmızı", "Beyazımsı", "Siyah", "Mavi"],
+        "Botanik renk sıfatı",
+        "Beyaza çalan tonları anlatan sıfat",
+        "'Sub-' öneki yaklaşık olarak 'biraz' veya '-ımsı' anlamı katabilir.",
+    ),
+    (
+        "Subflavus",
+        "'Subflavus' hangi anlamı taşır?",
+        "Sarımsı",
+        ["Gümüş", "Mor", "Sarımsı", "Koyu siyah"],
+        "Botanik renk sıfatı",
+        "Sarıya çalan tonları anlatan sıfat",
+        "'Subflavus' sarımsı anlamına gelir.",
+    ),
+    (
+        "Subrubens",
+        "'Subrubens' hangi anlamı taşır?",
+        "Kırmızımsı",
+        ["Kırmızımsı", "Mavimsi", "Yeşilimsi", "Beyazımsı"],
+        "Botanik renk sıfatı",
+        "Kırmızıya çalan tonları anlatan sıfat",
+        "'Subrubens' kırmızımsı anlamında yorumlanabilir.",
+    ),
+    (
+        "Subviridis",
+        "'Subviridis' hangi anlamı taşır?",
+        "Yeşilimsi",
+        ["Kızıl", "Gümüş", "Yeşilimsi", "Siyah"],
+        "Botanik renk sıfatı",
+        "Yeşile çalan tonları anlatan sıfat",
+        "'Subviridis' yeşilimsi anlamına gelir.",
+    ),
+]
+
+
+def build_question_pool():
+    """Ham soru verilerini uygulamanın kullandığı sözlüklere dönüştürür."""
+    result = []
+
+    for item in RAW_QUESTIONS:
+        latin, question, answer, options, plant, plant_name, explanation = item
+
+        unique_options = list(dict.fromkeys(options))
+
+        if answer not in unique_options:
+            unique_options.append(answer)
+
+        if len(unique_options) < 4:
+            continue
+
+        result.append(
+            {
+                "latin": latin,
+                "question": question,
+                "answer": answer,
+                "options": unique_options,
+                "plant": plant,
+                "plant_name": plant_name,
+                "explanation": explanation,
+            }
+        )
+
+    return result
+
+
+QUESTIONS = build_question_pool()
+
+
+# ============================================================
+# 4. OTURUM DURUMU
+# ============================================================
+
+DEFAULTS = {
+    "stage": "register",
+    "name": "",
+    "score": 0,
+    "start_time": None,
+    "elapsed_time": 0.0,
+    "quiz_questions": [],
+    "current_question": 0,
+    "answers": [],
+    "selected_answer": None,
+    "leaderboard": [
+        {
+            "id": "seed-linnaeus",
+            "İsim": "Linnaeus",
+            "Doğru Sayısı": 5,
+            "Toplam Soru": 5,
+            "Süre (sn)": 14.2,
+        },
+        {
+            "id": "seed-darwin",
+            "İsim": "Darwin",
+            "Doğru Sayısı": 4,
+            "Toplam Soru": 5,
+            "Süre (sn)": 11.0,
+        },
+        {
+            "id": "seed-mendel",
+            "İsim": "Mendel",
+            "Doğru Sayısı": 3,
+            "Toplam Soru": 5,
+            "Süre (sn)": 9.5,
+        },
+    ],
+    "run_id": None,
+    "submitted_run_id": None,
+    "last_answer_time": None,
+    "quiz_length": 20,
+}
+
+for key, value in DEFAULTS.items():
+    if key not in st.session_state:
+        st.session_state[key] = (
+            value.copy() if isinstance(value, (dict, list)) else value
+        )
+
+
+# ============================================================
+# 5. YARDIMCI FONKSİYONLAR
+# ============================================================
+
+
+def safe_text(value):
+    """HTML içinde gösterilen metinleri güvenli biçimde kaçışlar."""
+    return html.escape(str(value))
+
+
+def format_seconds(seconds):
+    """Saniyeyi okunabilir dakika/saniye biçimine dönüştürür."""
+    seconds = max(0, int(seconds))
+    minutes, remaining = divmod(seconds, 60)
+
+    if minutes:
+        return f"{minutes} dk {remaining} sn"
+
+    return f"{remaining} sn"
+
+
+def make_balanced_questions(count):
+    """Soruları karıştırır ve doğru cevapların konumlarını dengeler."""
+    source = QUESTIONS.copy()
+    random.shuffle(source)
+
+    selected = source[: min(count, len(source))]
+
+    positions = [0, 1, 2, 3] * ((len(selected) + 3) // 4)
+    positions = positions[: len(selected)]
+    random.shuffle(positions)
+
+    prepared = []
+
+    for question, correct_position in zip(selected, positions):
+        correct_answer = question["answer"]
+
+        distractors = [
+            option for option in question["options"] if option != correct_answer
+        ]
+
+        random.shuffle(distractors)
+        distractors = distractors[:3]
+
+        if len(distractors) < 3:
+            other_answers = list(
+                dict.fromkeys(
+                    q["answer"]
+                    for q in QUESTIONS
+                    if q["answer"] != correct_answer
+                    and q["answer"] not in distractors
+                )
+            )
+
+            random.shuffle(other_answers)
+
+            for option in other_answers:
+                if option not in distractors:
+                    distractors.append(option)
+
+                if len(distractors) == 3:
+                    break
+
+        if len(distractors) < 3:
+            continue
+
+        distractors = distractors[:3]
+        options = distractors.copy()
+        options.insert(correct_position, correct_answer)
+
+        prepared_question = question.copy()
+        prepared_question["options"] = options
+
+        prepared.append(prepared_question)
+
+    return prepared
+
+
+def start_quiz(name, count):
+    """Yeni bir oyun başlatır ve durumu ayarlar."""
+    selected_questions = make_balanced_questions(count)
+
+    st.session_state.name = name.strip()
+    st.session_state.score = 0
+    st.session_state.current_question = 0
+    st.session_state.answers = []
+    st.session_state.quiz_questions = selected_questions
+    st.session_state.start_time = time.time()
+    st.session_state.elapsed_time = 0.0
+    st.session_state.selected_answer = None
+    st.session_state.run_id = str(uuid.uuid4())
+    st.session_state.submitted_run_id = None
+    st.session_state.last_answer_time = None
+    st.session_state.stage = "quiz"
+
+
+# ============================================================
+# 6. SAYFA AKIŞLARI
+# ============================================================
+
+# ------------------------------------------------------------
+# 6.1. KAYIT EKRANI
+# ------------------------------------------------------------
+if st.session_state.stage == "register":
+    st.markdown(
+        """
+        <div class="hero-card">
+            <div class="hero-eyebrow">🌿 Botanica Akademi</div>
+            <h1 class="hero-title">Latince Botanik Renkleri Macerası</h1>
+            <p class="hero-description">
+                Bitki bilimi ve taksonomide kullanılan Latince renk terimlerini,
+                kökenlerini ve örnek bitki adlarını interaktif biçimde keşfedin.
+                Süreniz tutulur ve liderlik tablosuna kaydedilir!
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.form("register_form"):
+        name_input = st.text_input(
+            "Adınız veya Takma Adınız:",
+            value=st.session_state.name,
+            placeholder="Örn: Karl Linnaeus",
+        )
+
+        question_counts = [5, 10, 15, 20, len(QUESTIONS)]
+        selected_count = st.selectbox(
+            "Soru Sayısı:",
+            question_counts,
+            index=1,
+            format_func=lambda x: f"{x} Soru",
+        )
+
+        submitted = st.form_submit_button("Testi Başlat 🚀", use_container_width=True)
+
+        if submitted:
+            if not name_input.strip():
+                st.warning("Lütfen başlamak için adınızı girin.")
+            else:
+                start_quiz(name_input, selected_count)
+                st.rerun()
+
+    # Liderlik Tablosu Önizleme
+    if st.session_state.leaderboard:
+        st.markdown(
+            '<div class="section-heading"><h3>🏆 En İyi Skorlar</h3></div>',
+            unsafe_allow_html=True,
+        )
+        df_preview = pd.DataFrame(st.session_state.leaderboard)
+        df_preview = df_preview.sort_values(
+            by=["Doğru Sayısı", "Süre (sn)"], ascending=[False, True]
+        ).reset_index(drop=True)
+        df_preview.index = df_preview.index + 1
+        st.dataframe(
+            df_preview[["İsim", "Doğru Sayısı", "Toplam Soru", "Süre (sn)"]],
+            use_container_width=True,
+        )
+
+
+# ------------------------------------------------------------
+# 6.2. SORU EKRANI
+# ------------------------------------------------------------
+elif st.session_state.stage == "quiz":
+    questions = st.session_state.quiz_questions
+    index = st.session_state.current_question
+
+    if not questions or index >= len(questions):
+        st.session_state.stage = "register"
+        st.rerun()
+
+    q = questions[index]
+
+    progress = (index + 1) / len(questions)
+    st.progress(progress)
+
+    col1, col2 = st.columns([3, 1])
+    with col1:
+        st.caption(f"Soru {index + 1} / {len(questions)}")
+    with col2:
+        st.caption(f"Puan: {st.session_state.score}")
+
+    st.markdown(
+        f"""
+        <div class="question-card">
+            <div class="question-label">Botanik Terim</div>
+            <div class="latin-term">{safe_text(q['latin'])}</div>
+            <div class="question-text">{safe_text(q['question'])}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    # Şık seçimi için form
+    with st.form(f"quiz_form_{index}"):
+        selected_option = st.radio(
+            "Seçeneğinizi belirleyin:",
+            q["options"],
+            index=None,
+            label_visibility="collapsed",
+        )
+
+        submitted = st.form_submit_button("Cevabı Kontrol Et ✨", use_container_width=True)
+
+        if submitted:
+            if selected_option is None:
+                st.warning("Lütfen bir seçenek seçin.")
+            else:
+                is_correct = selected_option == q["answer"]
+                if is_correct:
+                    st.session_state.score += 1
+
+                st.session_state.answers.append(
+                    {
+                        "latin": q["latin"],
+                        "question": q["question"],
+                        "selected": selected_option,
+                        "correct": q["answer"],
+                        "is_correct": is_correct,
+                        "plant": q["plant"],
+                        "plant_name": q["plant_name"],
+                        "explanation": q["explanation"],
+                    }
+                )
+
+                st.session_state.last_answer_time = time.time()
+                st.session_state.stage = "feedback"
+                st.rerun()
+
+
+# ------------------------------------------------------------
+# 6.3. GERİBİLDİRİM VE AÇIKLAMA EKRANI
+# ------------------------------------------------------------
+elif st.session_state.stage == "feedback":
+    questions = st.session_state.quiz_questions
+    index = st.session_state.current_question
+    last_answer = st.session_state.answers[-1]
+    q = questions[index]
+
+    if last_answer["is_correct"]:
+        st.success("🎉 Harika! Doğru cevap.")
+    else:
+        st.error(
+            f"❌ Yanlış cevap. Doğru seçenek: **{safe_text(last_answer['correct'])}**"
+        )
+
+    st.markdown(
+        f"""
+        <div class="plant-card">
+            <div class="muted-text">Botanik Açıklama ve Örnek</div>
+            <div class="plant-name">🌿 {safe_text(q['plant'])} — <em>{safe_text(q['plant_name'])}</em></div>
+            <p class="plant-description">{safe_text(q['explanation'])}</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    is_last = index + 1 >= len(questions)
+    button_label = "Sonuçları Gör 🏆" if is_last else "Sonraki Soru ➡️"
+
+    if st.button(button_label, use_container_width=True):
+        if is_last:
+            if st.session_state.start_time:
+                st.session_state.elapsed_time = round(
+                    time.time() - st.session_state.start_time, 2
+                )
+            else:
+                st.session_state.elapsed_time = 0.0
+
+            current_run_id = st.session_state.get("run_id")
+            if (
+                current_run_id
+                and st.session_state.get("submitted_run_id") != current_run_id
+            ):
+                st.session_state.leaderboard.append(
+                    {
+                        "id": current_run_id,
+                        "İsim": st.session_state.name,
+                        "Doğru Sayısı": st.session_state.score,
+                        "Toplam Soru": len(questions),
+                        "Süre (sn)": st.session_state.elapsed_time,
+                    }
+                )
+                st.session_state.submitted_run_id = current_run_id
+
+            st.session_state.stage = "result"
+            st.rerun()
+        else:
+            st.session_state.current_question += 1
+            st.session_state.stage = "quiz"
+            st.rerun()
+
+
+# ------------------------------------------------------------
+# 6.4. SONUÇ VE LİDERLİK TABLOSU EKRANI
+# ------------------------------------------------------------
+elif st.session_state.stage == "result":
+    questions = st.session_state.quiz_questions
+    total_q = len(questions) if questions else 1
+    score = st.session_state.score
+    percentage = (score / total_q) * 100
+
+    if score == total_q:
+        st.balloons()
+
+    st.markdown(
+        f"""
+        <div class="result-banner">
+            <div class="hero-eyebrow">Quiz Tamamlandı</div>
+            <div class="result-score">{score} / {total_q} Doğru (%{percentage:.0f})</div>
+            <p class="muted-text" style="margin-top: .5rem;">
+                Süre: <strong>{format_seconds(st.session_state.elapsed_time)}</strong> ({st.session_state.elapsed_time} sn)
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<div class="section-heading"><h3>🌟 Liderlik Tablosu</h3></div>',
+        unsafe_allow_html=True,
+    )
+
+    df_lb = pd.DataFrame(st.session_state.leaderboard)
+    if not df_lb.empty:
+        # Doğru sayısına göre azalan, süreye göre artan sıralama
+        df_lb = df_lb.sort_values(
+            by=["Doğru Sayısı", "Süre (sn)"], ascending=[False, True]
+        ).reset_index(drop=True)
+        df_lb.index = df_lb.index + 1
+
+        # Kullanıcının kendi skorunu vurgulama veya şık gösterim
+        st.dataframe(
+            df_lb[["İsim", "Doğru Sayısı", "Toplam Soru", "Süre (sn)"]],
+            use_container_width=True,
+        )
+
+    with st.expander("📝 Detaylı Soru İncelemesi"):
+        for i, ans in enumerate(st.session_state.answers, 1):
+            icon = "✅" if ans["is_correct"] else "❌"
+            st.markdown(
+                f"""
+                <div class="answer-card {'answer-correct' if ans['is_correct'] else 'answer-wrong'}">
+                    <strong>{i}. {safe_text(ans['latin'])}</strong> — {safe_text(ans['question'])}<br>
+                    <span class="muted-text">Senin cevabın:</span> <strong>{safe_text(ans['selected'])}</strong> | 
+                    <span class="muted-text">Doğru cevap:</span> <strong>{safe_text(ans['correct'])}</strong><br>
+                    <em>🌱 {safe_text(ans['plant'])} ({safe_text(ans['plant_name'])})</em>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+    st.divider()
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Tekrar Oyna 🔄", use_container_width=True):
+            st.session_state.stage = "register"
+            st.session_state.run_id = None
+            st.session_state.submitted_run_id = None
+            st.rerun()
+    with col2:
+        if st.button("Ana Sayfaya Dön 🏠", use_container_width=True):
+            st.session_state.stage = "register"
+            st.session_state.name = ""
+            st.session_state.run_id = None
+            st.session_state.submitted_run_id = None
+            st.rerun()
