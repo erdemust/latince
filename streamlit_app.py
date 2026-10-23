@@ -126,14 +126,9 @@ def load_data(uploaded_bytes=None, file_mtime=None):
         source = DATA_FILE
 
     try:
-        df = pd.read_csv(
-            source,
-            encoding="utf-8-sig",
-            dtype=str,
-            keep_default_na=False,
-            quoting=csv.QUOTE_MINIMAL,
-            skipinitialspace=True,
-        )
+        df = pd.read_csv( source,    encoding="utf-8-sig",        dtype=str,    keep_default_na=False,    quoting=csv.QUOTE_MINIMAL,    skipinitialspace=True,
+    engine="python",)
+
     except (UnicodeDecodeError, pd.errors.ParserError) as exc:
         raise ValueError(
             f"Could not read the CSV file: {exc}"
