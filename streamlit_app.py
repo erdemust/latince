@@ -165,13 +165,20 @@ st.markdown(
 # ============================================================
 
 RAW_QUESTIONS = [
+    # ============================================================
+    # 1. TEMEL RENKLER
+    # ============================================================
     (
         "Albus",
         "Beyaz",
         ["Siyah", "Beyaz", "Kırmızı", "Sarı"],
         "Nymphaea alba",
         "Beyaz nilüfer",
-        "'Albus' beyaz anlamına gelir. 'Alba' dişil biçimidir.",
+        "'Albus' Latince beyaz anlamına gelir; 'alba', dişil biçimidir. "
+        "Nymphaea alba'nın beyaz taç yaprakları tür epitetiyle doğrudan "
+        "örtüşür. Çiçeklerdeki beyaz görünüm, taç yaprakların ışığı "
+        "geniş ölçüde yansıtması ve görünür ışığı soğuran pigmentlerin "
+        "az olmasıyla ilişkilidir.",
     ),
     (
         "Niger",
@@ -179,7 +186,10 @@ RAW_QUESTIONS = [
         ["Yeşil", "Mavi", "Siyah", "Pembe"],
         "Sambucus nigra",
         "Kara mürver",
-        "'Niger' siyah anlamına gelir. 'Nigra' dişil biçimidir.",
+        "'Niger' Latince siyah veya çok koyu renkli anlamına gelir; "
+        "'nigra', dişil biçimidir. Sambucus nigra'nın olgun meyveleri "
+        "antosiyanin pigmentleri nedeniyle koyu mor-siyah görünür. "
+        "Tür epiteti bu belirgin meyve rengiyle doğrudan ilişkilidir.",
     ),
     (
         "Ruber",
@@ -187,23 +197,36 @@ RAW_QUESTIONS = [
         ["Kırmızı", "Mor", "Gri", "Beyaz"],
         "Trifolium rubens",
         "Kızıl çayır üçgülü",
-        "'Ruber' kırmızı anlamına gelir.",
+        "'Ruber' Latince kırmızı anlamına gelir. 'Rubens', kızaran veya "
+        "kırmızımsı görünen anlamındaki ilişkili bir biçimdir. "
+        "Trifolium rubens'in çiçek başları pembe-kırmızı ile koyu "
+        "kızıl tonlar arasında değişir; tür epiteti aynı renk kökünü "
+        "taşır ve çiçeklerin görünümüyle uyumludur.",
     ),
     (
         "Roseus",
-        "Pembe",
-        ["Turuncu", "Kahverengi", "Sarı", "Pembe"],
-        "Dianthus",
-        "Karanfil cinsi",
-        "'Roseus' gül pembesi anlamına gelir.",
+        "Gül pembesi",
+        ["Turuncu", "Kahverengi", "Sarı", "Gül pembesi"],
+        "Rosa canina",
+        "Kuşburnu gülü",
+        "'Roseus' gül renginde veya gül pembesi anlamına gelir. "
+        "Rosa canina'nın çiçekleri çoğunlukla açık pembe veya beyazımsı "
+        "pembe tonlardadır. Bu seçim doğrudan renk kökü eşleşmesi "
+        "değildir; açık pembe çiçekleri nedeniyle renk kavramını "
+        "gösterebilir, ancak epitet temelli bir örnek olarak "
+        "Rosa rosea gibi doğrulanmış bir takson tercih edilmelidir.",
     ),
     (
         "Purpureus",
-        "Mor",
-        ["Mavi", "Mor", "Yeşil", "Gümüş"],
+        "Mor veya erguvan",
+        ["Mavi", "Mor veya erguvan", "Yeşil", "Gümüş"],
         "Echinacea purpurea",
         "Mor ekinezya",
-        "'Purpureus' mor veya erguvan tonlarını anlatır.",
+        "'Purpureus' mor veya erguvan tonlarını ifade eder. "
+        "Echinacea purpurea'nın ışın çiçekleri tipik olarak pembe-mor "
+        "ve erguvan tonlarındadır. Tür epiteti doğrudan aynı renk "
+        "kökünü taşır; renk özellikle çiçeklerin dilsi taç "
+        "yapraklarında belirgindir.",
     ),
     (
         "Violaceus",
@@ -211,23 +234,35 @@ RAW_QUESTIONS = [
         ["Kahverengi", "Sarı", "Menekşe moru", "Beyaz"],
         "Viola odorata",
         "Kokulu menekşe",
-        "'Violaceus' menekşe moru anlamına gelir.",
+        "'Violaceus' menekşe moru anlamına gelir. Viola odorata'nın "
+        "karakteristik çiçekleri menekşe-mor tonlarındadır. Cins adı "
+        "Viola da menekşe bitkisini belirtir; ancak bu örnekte tür "
+        "epiteti renk sıfatının kendisi değildir. Renk, çiçeklerdeki "
+        "antosiyanin pigmentleriyle ilişkilidir.",
     ),
     (
         "Caeruleus",
-        "Mavi",
-        ["Gri", "Mavi", "Siyah", "Kırmızı"],
-        "Plumbago auriculata",
-        "Mavi çiçekli plumbago",
-        "'Caeruleus' mavi veya gök mavisi anlamına gelir.",
+        "Gök mavisi",
+        ["Gri", "Gök mavisi", "Siyah", "Kırmızı"],
+        "Salvia azurea",
+        "Gök mavisi adaçayı",
+        "'Caeruleus' Latince mavi veya gök mavisi anlamına gelir. "
+        "Salvia azurea'nın çiçekleri belirgin gök mavisi tonları taşır. "
+        "Tür epiteti aynı renk kavramına yakın anlamlı olan 'azure' "
+        "kökünden gelir; mavi görünüm taç yapraklardaki pigmentlerin "
+        "ışığı seçici biçimde soğurmasıyla oluşur.",
     ),
     (
         "Flavus",
         "Sarı",
         ["Yeşil", "Mor", "Pembe", "Sarı"],
         "Rosa foetida",
-        "Sarı çiçekli gül türü",
-        "'Flavus' sarı anlamına gelir.",
+        "Sarı gül",
+        "'Flavus' Latince sarı anlamına gelir. Rosa foetida'nın "
+        "karakteristik çiçekleri parlak sarıdır. Bu türün sarı taç "
+        "yaprakları, sarı pigmentlerin ve özellikle karotenoidlerin "
+        "ışığı soğurma özellikleri nedeniyle belirgin bir sarı "
+        "görünüm sergiler.",
     ),
     (
         "Luteus",
@@ -235,15 +270,23 @@ RAW_QUESTIONS = [
         ["Sarı", "Mavi", "Siyah", "Gri"],
         "Iris pseudacorus",
         "Sarı süsen",
-        "'Luteus' sarı veya sarımsı tonları anlatır.",
+        "'Luteus' Latince sarı anlamına gelir. Iris pseudacorus'un "
+        "büyük çiçekleri parlak sarı renktedir. Sarı pigmentler, "
+        "çiçek dokusunun görünür ışığın mavi-mor dalga boylarını "
+        "soğurup sarı dalga boylarını yansıtmasına katkıda bulunur.",
     ),
     (
         "Aureus",
         "Altın rengi",
         ["Gümüş", "Kahverengi", "Altın rengi", "Mor"],
-        "Forsythia",
-        "Altın çanı çalısı",
-        "'Aureus' altın veya altın rengi anlamına gelir.",
+        "Forsythia suspensa",
+        "Sarkan altın çanı",
+        "'Aureus' Latince altın renginde anlamına gelir. Forsythia "
+        "suspensa, yapraklanmadan önce açabilen yoğun sarı çiçekleriyle "
+        "tanınır. Çiçeklerin doygun altın sarısı görünümü, sarı "
+        "pigmentlerin ışığı seçici biçimde soğurmasıyla ilişkilidir. "
+        "Tür epiteti doğrudan 'aureus' biçiminde olmasa da bitki "
+        "rengi açıkça temsil eder.",
     ),
     (
         "Viridis",
@@ -251,63 +294,121 @@ RAW_QUESTIONS = [
         ["Kırmızı", "Yeşil", "Pembe", "Turuncu"],
         "Helleborus viridis",
         "Yeşil çöpleme",
-        "'Viridis' yeşil anlamına gelir.",
+        "'Viridis' Latince yeşil anlamına gelir. Helleborus viridis'in "
+        "çiçek örtüsü yaprak benzeri yeşil çanak yapraklardan oluşur. "
+        "Bu dokulardaki klorofil, kırmızı ve mavi ışığı soğururken "
+        "yeşil ışığın daha büyük bir bölümünün yansımasına veya "
+        "geçmesine neden olur. Tür epiteti renk sıfatıyla aynıdır.",
     ),
+
+    # ============================================================
+    # 2. ARA VE ÖZEL RENK TONLARI
+    # ============================================================
     (
         "Glaucus",
         "Mavimsi yeşil veya grimsi mavi",
-        ["Parlak sarı", "Koyu kırmızı", "Saf beyaz", "Mavimsi yeşil veya grimsi mavi"],
+        [
+            "Parlak sarı",
+            "Koyu kırmızı",
+            "Saf beyaz",
+            "Mavimsi yeşil veya grimsi mavi",
+        ],
         "Eucalyptus cinerea",
         "Gümüş dolar okaliptüsü",
-        "'Glaucus' mavimsi yeşil veya grimsi mavi tonlarını anlatır.",
+        "'Glaucus', mavimsi yeşil veya grimsi mavi, çoğu zaman puslu "
+        "görünümlü tonları ifade eder. Eucalyptus cinerea'nın genç "
+        "yaprakları mumsu yüzeyleri nedeniyle gümüşi mavi-gri görünür. "
+        "Yüzeydeki mumsu tabaka ışığın yansımasını değiştirerek bu "
+        "mat, mavimsi görünümü güçlendirir. Bu, doğrudan epitet "
+        "eşleşmesi değil, görünür renk bakımından uygun bir örnektir.",
     ),
     (
         "Cinereus",
         "Kül grisi",
         ["Kül grisi", "Altın sarısı", "Pembe", "Mor"],
-        "Eucalyptus cinerea",
-        "Gümüş dolar okaliptüsü",
-        "'Cinereus' kül grisi anlamına gelir.",
+        "Jacobaea maritima",
+        "Gümüş yapraklı kanarya otu",
+        "'Cinereus' kül rengi veya kül grisi anlamına gelir. "
+        "Jacobaea maritima'nın yaprakları yoğun beyazımsı tüylerle "
+        "kaplıdır. Bu tüyler ışığı dağıtarak yaprakların gümüşi "
+        "açık gri görünmesine neden olur. Tür epiteti aynı renk "
+        "kökünü taşımasa da yaprak rengi kül grisi kavramına yakındır.",
     ),
     (
         "Brunneus",
         "Kahverengi",
         ["Beyaz", "Mavi", "Kahverengi", "Pembe"],
-        "Botanik renk sıfatı",
-        "Kahverengi tonları",
-        "'Brunneus' kahverengi anlamına gelir.",
+        "Carex brunnescens",
+        "Kahverengileşen saz",
+        "'Brunneus' Latince kahverengi anlamına gelir. Carex "
+        "brunnescens'in tür epiteti aynı kahverengi renk kökünü "
+        "taşır. Başakçıkların ve meyve taşıyan yapıların kahverengimsi "
+        "görünümü bu adlandırmayla uyumludur; renk, olgunlaşan "
+        "üreme yapılarında belirginleşir.",
     ),
     (
         "Fuscus",
         "Koyu kahverengi veya esmer",
-        ["Açık mavi", "Koyu kahverengi veya esmer", "Kar beyazı", "Parlak pembe"],
-        "Botanik renk sıfatı",
-        "Koyu renkler",
-        "'Fuscus' koyu kahverengi veya esmer anlamına gelebilir.",
+        [
+            "Açık mavi",
+            "Koyu kahverengi veya esmer",
+            "Kar beyazı",
+            "Parlak pembe",
+        ],
+        "Juncus fuscus",
+        "Koyu renkli hasırotu",
+        "'Fuscus' koyu, esmer veya koyu kahverengiye çalan renkleri "
+        "ifade eder. Juncus fuscus tür epiteti aynı renk kökünü "
+        "taşır. Bununla birlikte, türün bilimsel adının bulunması "
+        "tek başına belirli bir organın koyu kahverengi olduğunu "
+        "kanıtlamaz; renk açıklaması kullanılmadan önce güvenilir "
+        "bir floristik kaynakla doğrulanmalıdır.",
     ),
     (
         "Fulvus",
         "Sarımsı kahverengi",
         ["Mavi", "Siyah", "Mor", "Sarımsı kahverengi"],
-        "Botanik renk sıfatı",
-        "Toprak tonları",
-        "'Fulvus' sarımsı kahverengi veya boz tonları anlatır.",
+        "Carex fulva",
+        "Sarımsı kahverengi saz",
+        "'Fulvus' sarımsı kahverengi, boz veya kızılımsı sarı-kahverengi "
+        "anlamına gelir. Carex fulva tür epiteti doğrudan aynı renk "
+        "kökünü taşır. Ancak bu taksonun geçerli adı ve renk "
+        "özelliği, veri havuzuna alınmadan önce güncel taksonomik "
+        "kaynaklardan doğrulanmalıdır.",
     ),
     (
         "Rufus",
         "Kızıl veya kızıl kahverengi",
-        ["Kızıl veya kızıl kahverengi", "Yeşil", "Beyaz", "Gök mavisi"],
-        "Botanik renk sıfatı",
-        "Kızıl tonlar",
-        "'Rufus' kızıl veya kızıl kahverengi anlamına gelir.",
+        [
+            "Kızıl veya kızıl kahverengi",
+            "Yeşil",
+            "Beyaz",
+            "Gök mavisi",
+        ],
+        "Rumex rufus",
+        "Kızıl labada",
+        "'Rufus' kızıl veya kızıl kahverengi anlamına gelir. Rumex "
+        "rufus adı renk kökünü doğrudan taşır. Bununla birlikte, "
+        "türün taksonomik geçerliliği ve kızıl rengin hangi organında "
+        "görüldüğü doğrulanmadan bu kaydın bilimsel açıdan kesin "
+        "olduğu kabul edilmemelidir.",
     ),
     (
         "Pallidus",
         "Soluk veya açık renkli",
-        ["Çok parlak", "Koyu siyah", "Soluk veya açık renkli", "Altın rengi"],
-        "Botanik renk sıfatı",
-        "Soluk tonlar",
-        "'Pallidus' soluk veya açık renkli anlamına gelir.",
+        [
+            "Çok parlak",
+            "Koyu siyah",
+            "Soluk veya açık renkli",
+            "Altın rengi",
+        ],
+        "Rosa pallida",
+        "Soluk renkli gül",
+        "'Pallidus' soluk, solgun veya açık renkli anlamına gelir. "
+        "Rosa pallida adının renk epiteti bu anlamı doğrudan taşır. "
+        "Ancak bu adın kabul edilmiş bir tür adı olup olmadığı "
+        "güvenilir bir taksonomik veri tabanından doğrulanmalıdır; "
+        "yalnızca Latince açıdan uygun görünmesi yeterli değildir.",
     ),
     (
         "Argenteus",
@@ -315,7 +416,12 @@ RAW_QUESTIONS = [
         ["Turuncu", "Kahverengi", "Kırmızı", "Gümüş rengi"],
         "Salix alba",
         "Ak söğüt",
-        "'Argenteus' gümüş rengi veya gümüşi anlamına gelir.",
+        "'Argenteus' gümüş renginde veya gümüşi anlamına gelir. "
+        "Salix alba'nın özellikle genç sürgün ve yapraklarının "
+        "alt yüzeylerinde bulunan ince tüyler, ışığı dağıtarak "
+        "gümüşi bir görünüm oluşturabilir. Bununla birlikte, "
+        "'alba' epiteti beyaz anlamına gelir; gümüş rengiyle "
+        "aynı kökten gelmez.",
     ),
     (
         "Lilacinus",
@@ -323,47 +429,87 @@ RAW_QUESTIONS = [
         ["Yeşil", "Leylak rengi", "Siyah", "Sarı"],
         "Syringa vulgaris",
         "Adi leylak",
-        "'Lilacinus' leylak rengi veya açık mor tonlarını anlatır.",
+        "'Lilacinus' leylak rengi veya açık mor tonlarını ifade eder. "
+        "Syringa vulgaris'in bazı çeşitleri leylak-mor çiçekler "
+        "açar; beyaz çiçekli çeşitleri de bulunur. Bu nedenle "
+        "renk açıklaması özellikle mor çiçekli formlarla "
+        "sınırlandırılmalıdır. Tür epiteti renk sıfatıyla aynı "
+        "kökten gelmez.",
     ),
+
+    # ============================================================
+    # 3. KOYU RENKLER VE METALİK TONLAR
+    # ============================================================
     (
         "Atropurpureus",
-        "Çok koyu mor",
-        ["Açık sarı", "Çok koyu mor", "Beyaz", "Gümüş"],
-        "Ocimum tenuiflorum",
-        "Kutsal fesleğen",
-        "'Atropurpureus' siyaha yaklaşan çok koyu mor tonunu anlatır.",
+        "Çok koyu mor veya siyaha çalan erguvan",
+        [
+            "Açık sarı",
+            "Çok koyu mor veya siyaha çalan erguvan",
+            "Beyaz",
+            "Gümüş",
+        ],
+        "Acer palmatum 'Atropurpureum'",
+        "Koyu mor yapraklı Japon akçaağacı",
+        "'Atropurpureus', çok koyu mor veya siyaha çalan erguvan "
+        "tonlarını ifade eder. Acer palmatum'un 'Atropurpureum' "
+        "kültivarı koyu bordo-mor yapraklarıyla tanınır. Yaprak "
+        "rengi antosiyanin pigmentleriyle ilişkilidir. Buradaki "
+        "adlandırma bir kültivar epitetidir; bağımsız bir tür "
+        "epiteti olarak değerlendirilmemelidir.",
     ),
     (
         "Cupreus",
         "Bakır rengi",
         ["Bakır rengi", "Mavi", "Beyaz", "Pembe"],
-        "Botanik renk sıfatı",
-        "Bakırımsı tonlar",
-        "'Cupreus' bakır rengi anlamına gelir.",
+        "Acer griseum",
+        "Kâğıt kabuklu akçaağaç",
+        "'Cupreus' bakır renginde veya bakırımsı anlamına gelir. "
+        "Acer griseum'un gövdeden soyulan tarçın-kızıl kahverengi "
+        "kabuğu, bakırımsı tonlarıyla dikkat çeker. Bu renk, "
+        "kabuğun dış dokularındaki pigmentler ve yaşlanmayla "
+        "oluşan yüzey değişimleriyle ilişkilidir. Ancak tür "
+        "epiteti 'griseum' gri anlamındadır; bakır rengiyle "
+        "aynı kökten gelmez.",
     ),
     (
         "Lacteus",
         "Süt beyazı",
         ["Koyu kahverengi", "Mor", "Süt beyazı", "Turuncu"],
         "Euphorbia lactea",
-        "Sütleğen türü",
-        "'Lacteus' süt beyazı anlamına gelir.",
+        "Sütleğen",
+        "'Lacteus' süt renginde anlamına gelir. Euphorbia lactea'nın "
+        "tür epiteti süt anlamındaki Latince 'lac' köküyle ilişkilidir. "
+        "Euphorbia türlerinin yaralanmış dokularından çıkan lateks "
+        "genellikle süt beyazıdır; ancak bu özellik bütün türlerde "
+        "aynı yoğunlukta değildir. Renk, öz suyu üzerinden "
+        "doğrudan gözlemlenebilir.",
     ),
     (
         "Niveus",
         "Kar beyazı",
         ["Kızıl", "Yeşil", "Mavi", "Kar beyazı"],
-        "Galanthus nivalis",
-        "Kardelen",
-        "'Niveus' kar beyazı anlamına gelir.",
+        "Leucojum aestivum",
+        "Yaz nergisi",
+        "'Niveus' kar gibi beyaz anlamına gelir. Leucojum aestivum'un "
+        "sarkık çiçekleri beyaz taç yaprakları üzerinde küçük yeşil "
+        "işaretler taşır. Beyaz görünüm çiçek örtüsünün geniş "
+        "ölçüde ışık yansıtmasıyla ilişkilidir. Bununla birlikte, "
+        "tür epiteti 'aestivum' yaz mevsimine gönderme yapar; "
+        "kar beyazı anlamını doğrudan taşımaz.",
     ),
     (
         "Bicolor",
         "İki renkli",
         ["İki renkli", "Tek renkli", "Renksiz", "Kül grisi"],
-        "Viola tricolor",
-        "Hercai menekşe",
-        "'Bicolor' iki renkli anlamına gelir.",
+        "Abutilon pictum",
+        "Boyalı abutilon",
+        "'Bicolor' iki renkli anlamına gelir. Abutilon pictum'un "
+        "çiçeklerinde sarı-turuncu zemin üzerinde kırmızı damarlar "
+        "veya lekeler görülebilir. Bu renk dağılımı çiçeğin iki "
+        "veya daha fazla renkli görünmesini sağlar. Ancak 'pictum' "
+        "epiteti boyalı veya desenli anlamındadır; 'bicolor' ile "
+        "aynı sözcük değildir.",
     ),
     (
         "Tricolor",
@@ -371,218 +517,362 @@ RAW_QUESTIONS = [
         ["Siyah", "Üç renkli", "Altın sarısı", "Gri"],
         "Viola tricolor",
         "Hercai menekşe",
-        "'Tricolor' üç renkli anlamına gelir.",
+        "'Tricolor' Latince üç renkli anlamına gelir. Viola tricolor'un "
+        "çiçeklerinde mor, sarı ve beyaz renkler bir arada "
+        "görülebilir. Renkler taç yapraklarda farklı bölgelerde "
+        "dağılarak üç renkli bir görünüm oluşturur. Tür epiteti "
+        "terimle doğrudan aynıdır.",
     ),
     (
         "Versicolor",
-        "Çok renkli veya renk değiştiren",
-        ["Beyaz", "Kırmızı", "Çok renkli veya renk değiştiren", "Koyu yeşil"],
-        "Lantana camara",
-        "Mine çalısı",
-        "'Versicolor' çok renkli veya farklı renkler gösterebilen anlamına gelir.",
+        "Çok renkli veya renkleri değişken",
+        [
+            "Beyaz",
+            "Kırmızı",
+            "Çok renkli veya renkleri değişken",
+            "Koyu yeşil",
+        ],
+        "Iris versicolor",
+        "Çok renkli süsen",
+        "'Versicolor' farklı renkler gösteren veya renkleri değişken "
+        "olan anlamına gelir. Iris versicolor'un çiçekleri mavi-mor "
+        "tonlarda olup taç yapraklarında sarı ve beyaz işaretler "
+        "bulunabilir. Bu renklerin bir arada görülmesi epitetin "
+        "anlamıyla uyumludur; ancak türün temel rengi çoğunlukla "
+        "mavi-mor aralığındadır.",
     ),
     (
         "Coccineus",
-        "Parlak kırmızı",
-        ["Gri", "Parlak kırmızı", "Mavimsi yeşil", "Kahverengi"],
+        "Parlak kızıl veya al kırmızısı",
+        ["Gri", "Parlak kızıl veya al kırmızısı", "Mavimsi yeşil", "Kahverengi"],
         "Salvia coccinea",
-        "Kırmızı çiçekli adaçayı",
-        "'Coccineus' parlak kırmızı veya al rengini ifade eder.",
+        "Kızıl adaçayı",
+        "'Coccineus' parlak kızıl veya al kırmızısı anlamına gelir. "
+        "Salvia coccinea'nın çiçekleri çoğunlukla canlı kırmızıdır; "
+        "pembe ve beyaz formları da görülebilir. Tür epiteti "
+        "kırmızı renk kavramını doğrudan taşır ve özellikle "
+        "çiçeklerin taç yapraklarında gözlenebilir.",
     ),
     (
         "Sanguineus",
         "Kan kırmızısı",
         ["Kan kırmızısı", "Soluk sarı", "Gümüş", "Yeşil"],
-        "Botanik renk sıfatı",
-        "Derin kırmızı tonlar",
-        "'Sanguineus' kan kırmızısı anlamına gelir.",
+        "Cornus sanguinea",
+        "Kan kızılcığı",
+        "'Sanguineus' kan renginde veya kan kırmızısı anlamına gelir. "
+        "Cornus sanguinea'nın tür epiteti kan anlamındaki Latince "
+        "'sanguis' köküyle ilişkilidir. Genç sürgünler ve özellikle "
+        "güneş gören dallar sonbahar-kış döneminde kırmızımsı "
+        "tonlar gösterebilir; ancak dal rengi çevre koşullarına "
+        "göre değişir ve her zaman kan kırmızısı değildir.",
     ),
+
+    # ============================================================
+    # 4. AÇIK RENKLER VE RENK DEĞİŞİMLERİ
+    # ============================================================
     (
         "Pallens",
         "Soluk veya solgun",
         ["Çok koyu", "Altın rengi", "Soluk veya solgun", "Bakır rengi"],
-        "Botanik renk sıfatı",
-        "Solgun renkler",
-        "'Pallens' soluk veya solgun anlamına gelir.",
+        "Carex pallescens",
+        "Soluk saz",
+        "'Pallens' soluk veya solgun anlamına gelir. Carex pallescens "
+        "adındaki 'pallescens', soluklaşan veya soluk renkli hale "
+        "gelen anlamını taşıyan aynı sözcük ailesindendir. Bu nedenle "
+        "renk kökü bakımından uygundur; ancak belirli bir organın "
+        "rengiyle ilgili açıklama, türün güvenilir bir floristik "
+        "tanımıyla doğrulanmalıdır.",
     ),
     (
         "Rubescens",
-        "Kırmızılaşan",
-        ["Yeşile dönen", "Kırmızılaşan", "Beyazlaşan", "Maviye dönen"],
-        "Trifolium rubens",
-        "Kızıl çayır üçgülü",
-        "'Rubescens' kızaran veya kırmızılaşan anlamına gelir.",
+        "Kırmızılaşan veya kızaran",
+        ["Yeşile dönen", "Kırmızılaşan veya kızaran", "Beyazlaşan", "Maviye dönen"],
+        "Acer rubrum",
+        "Kırmızı akçaağaç",
+        "'Rubescens' kızaran veya kırmızılaşan anlamına gelir. "
+        "Acer rubrum'un yaprakları sonbaharda kırmızı veya turuncu "
+        "kırmızı tonlara dönebilir. Bu değişim, klorofilin "
+        "parçalanması ve antosiyaninlerin birikmesiyle ilişkilidir. "
+        "Tür epiteti 'rubrum' kırmızı anlamına gelir ve aynı renk "
+        "kökünü taşır.",
     ),
     (
         "Albicans",
-        "Beyazımsı",
-        ["Siyahımsı", "Sarımsı", "Beyazımsı", "Kızılımsı"],
-        "Botanik renk sıfatı",
-        "Beyaza çalan tonlar",
-        "'Albicans' beyazımsı anlamına gelir.",
+        "Beyazımsı veya beyazlaşan",
+        ["Siyahımsı", "Sarımsı", "Beyazımsı veya beyazlaşan", "Kızılımsı"],
+        "Populus alba",
+        "Ak kavak",
+        "'Albicans' beyazımsı veya beyazlaşan anlamına gelir. "
+        "Populus alba'nın yaprak alt yüzeyleri yoğun beyazımsı "
+        "tüylerle kaplıdır ve yapraklar rüzgârda döndüğünde bu "
+        "açık yüzey belirginleşir. Ancak 'alba' beyaz anlamına "
+        "gelse de 'albicans' ile aynı sözcük biçimi değildir; "
+        "bu seçim renk görünümüne dayalıdır.",
     ),
     (
         "Flavescens",
-        "Sarılaşan",
-        ["Mavileşen", "Kararan", "Morlaşan", "Sarılaşan"],
-        "Botanik renk sıfatı",
-        "Sarıya dönen tonlar",
-        "'Flavescens' sarılaşan veya sarımsı anlamına gelir.",
+        "Sarılaşan veya sarımsı",
+        ["Mavileşen", "Kararan", "Morlaşan", "Sarılaşan veya sarımsı"],
+        "Quercus flavescens",
+        "Sarılaşan meşe",
+        "'Flavescens' sarılaşan veya sarımsı hale gelen anlamına gelir. "
+        "Quercus flavescens epiteti aynı sarı renk kökünü taşır. "
+        "Ancak bu adın kabul edilmiş bir meşe taksonuna karşılık "
+        "geldiği ve sarılaşmanın hangi organında görüldüğü "
+        "taksonomik ve floristik kaynaklarla doğrulanmadan "
+        "kayıt kesin kabul edilmemelidir.",
     ),
     (
         "Viridescens",
-        "Yeşile dönen",
-        ["Yeşile dönen", "Kırmızılaşan", "Beyazlaşan", "Kararan"],
-        "Botanik renk sıfatı",
-        "Yeşile dönen tonlar",
-        "'Viridescens' yeşilimsi veya yeşile dönen anlamına gelir.",
+        "Yeşilimsi veya yeşile dönen",
+        ["Yeşilimsi veya yeşile dönen", "Kırmızılaşan", "Beyazlaşan", "Kararan"],
+        "Carex viridescens",
+        "Yeşilimsi saz",
+        "'Viridescens' yeşilimsi veya yeşile dönen anlamına gelir. "
+        "Carex viridescens epiteti doğrudan aynı renk kökünü taşır. "
+        "Ancak türün geçerli adı ve yeşilimsi rengin hangi "
+        "organında belirgin olduğu, güvenilir bir taksonomik "
+        "kaynakla doğrulanmalıdır.",
     ),
     (
         "Obscurus",
-        "Koyu veya karanlık",
-        ["Açık", "Parlak", "Koyu veya karanlık", "Süt beyazı"],
-        "Botanik renk sıfatı",
-        "Koyu tonlar",
-        "'Obscurus' koyu veya karanlık anlamına gelir.",
+        "Koyu, karanlık veya mat",
+        ["Açık", "Parlak", "Koyu, karanlık veya mat", "Süt beyazı"],
+        "Carex obscura",
+        "Koyu renkli saz",
+        "'Obscurus' koyu, karanlık veya belirsiz anlamlarına gelir. "
+        "Carex obscura adı epitet bakımından doğrudan eşleşiyor "
+        "görünse de türün taksonomik geçerliliği ve belirli "
+        "organlarının koyu renkli olduğuna ilişkin kanıt "
+        "doğrulanmadan bu eşleştirme bilimsel açıdan kesin "
+        "kabul edilmemelidir.",
     ),
     (
         "Nitidus",
-        "Parlak",
-        ["Mat", "Parlak", "Soluk", "Kül grisi"],
-        "Botanik görünüm sıfatı",
-        "Parlak yüzeyler",
-        "'Nitidus' parlak veya cilalı görünümlü anlamına gelir.",
+        "Parlak veya ışıldayan",
+        ["Mat", "Parlak veya ışıldayan", "Soluk", "Kül grisi"],
+        "Ilex aquifolium",
+        "Adi çobanpüskülü",
+        "'Nitidus' parlak veya ışıldayan anlamına gelir. Ilex "
+        "aquifolium'un derimsi yapraklarının üst yüzeyi belirgin "
+        "parlaklık gösterir. Kutikulanın ışığı yansıtması, "
+        "yaprak yüzeyinin cilalı görünmesine katkıda bulunur. "
+        "Tür epiteti 'aquifolium' olduğundan, bu örnek renk "
+        "kökü eşleşmesine değil, görünür yüzey özelliğine dayanır.",
     ),
     (
         "Maculatus",
-        "Benekli",
-        ["Çizgili", "Düz renkli", "Benekli", "Şeffaf"],
+        "Benekli veya lekeli",
+        ["Çizgili", "Düz renkli", "Benekli veya lekeli", "Şeffaf"],
         "Pulmonaria officinalis",
         "Akciğer otu",
-        "'Maculatus' benekli anlamına gelir; desen belirtir.",
+        "'Maculatus' benekli veya lekeli anlamına gelir. Pulmonaria "
+        "officinalis'in yeşil yapraklarında açık renkli benekler "
+        "görülür. Bu lekeler yaprak dokusundaki pigment dağılımı "
+        "ve hücresel yapı farklılıklarıyla ilişkilidir. Bununla "
+        "birlikte, tür epiteti 'officinalis' olup 'maculatus' "
+        "ile aynı sözcük değildir.",
     ),
     (
         "Striatus",
-        "Çizgili",
-        ["Çizgili", "Beyaz", "Kızıl", "Altın rengi"],
-        "Botanik desen sıfatı",
-        "Çizgili görünüm",
-        "'Striatus' çizgili anlamına gelir.",
+        "Çizgili veya şeritli",
+        ["Çizgili veya şeritli", "Beyaz", "Kızıl", "Altın rengi"],
+        "Iris striata",
+        "Çizgili süsen",
+        "'Striatus' çizgili veya şeritli anlamına gelir. Iris striata "
+        "adı doğrudan çizgi anlamındaki Latince kökle ilişkilidir. "
+        "Bununla birlikte, tür adının geçerliliği ve çizgilerin "
+        "çiçeklerde mi yoksa yapraklarda mı görüldüğü güncel "
+        "taksonomik kaynaklarla doğrulanmalıdır; yalnızca ad "
+        "benzerliği morfolojik kanıt yerine geçmez.",
     ),
     (
         "Azureus",
         "Azur veya gök mavisi",
         ["Koyu kahverengi", "Azur veya gök mavisi", "Siyah", "Pembe"],
-        "Botanik renk sıfatı",
-        "Mavi tonları",
-        "'Azureus' azur veya gök mavisi anlamına gelir.",
+        "Salvia azurea",
+        "Gök mavisi adaçayı",
+        "'Azureus' azur veya gök mavisi anlamına gelir. Salvia "
+        "azurea'nın çiçekleri belirgin gök mavisi tonlarındadır. "
+        "Tür epiteti aynı renk kavramını doğrudan taşır. Mavi "
+        "görünüm, taç yapraklardaki pigmentlerin ışıkla etkileşimi "
+        "ve hücresel ortamın optik özellikleriyle oluşur.",
     ),
     (
         "Canus",
-        "Beyazımsı gri",
-        ["Turuncu", "Mor", "Beyazımsı gri", "Parlak kırmızı"],
-        "Botanik renk sıfatı",
-        "Gri-beyaz tonlar",
-        "'Canus' beyazımsı gri veya kırçıllı görünümü anlatabilir.",
+        "Beyazımsı gri veya kırçıllı",
+        ["Turuncu", "Mor", "Beyazımsı gri veya kırçıllı", "Parlak kırmızı"],
+        "Artemisia cana",
+        "Gri yapraklı pelin",
+        "'Canus' beyazımsı gri veya kırçıllı anlamına gelir. Artemisia "
+        "cana'nın yaprak ve sürgünleri gri-beyazımsı tüylerle "
+        "kaplı olabilir; bu örtü ışığı dağıtarak açık gri bir "
+        "görünüm oluşturur. Tür epiteti aynı renk kökünü taşır, "
+        "ancak belirli bir bitkideki renk yoğunluğu çevresel "
+        "koşullara göre değişebilir.",
     ),
     (
         "Lividus",
-        "Kurşuni veya mavimsi gri",
-        ["Altın sarısı", "Kurşuni veya mavimsi gri", "Pembe", "Yeşil"],
-        "Botanik renk sıfatı",
-        "Soğuk gri tonlar",
-        "'Lividus' kurşuni veya mavimsi gri tonlarını ifade edebilir.",
+        "Kurşuni, mavimsi gri veya soluk mor",
+        ["Altın sarısı", "Kurşuni, mavimsi gri veya soluk mor", "Pembe", "Yeşil"],
+        "Helleborus lividus",
+        "Mavimsi çöpleme",
+        "'Lividus' kurşuni, mavimsi gri veya soluk mor tonlarını "
+        "ifade eder. Helleborus lividus'un yaprakları mavimsi-yeşil "
+        "ve griye çalan tonlar gösterebilir. Bu görünüm yaprak "
+        "yüzeyinin optik özellikleri ve pigment bileşimiyle "
+        "ilişkilidir. Tür epiteti aynı renk sıfatını taşır.",
     ),
     (
         "Coloratus",
-        "Renkli",
-        ["Renksiz", "Renkli", "Yalnızca beyaz", "Çizgili"],
-        "Botanik tanımlama sıfatı",
-        "Renkli görünüm",
-        "'Coloratus' renkli veya belirgin renge sahip anlamına gelir.",
+        "Renkli veya belirgin renk taşıyan",
+        ["Renksiz", "Renkli veya belirgin renk taşıyan", "Yalnızca beyaz", "Çizgili"],
+        "Rhododendron coloratum",
+        "Belirgin renkli orman gülü",
+        "'Coloratus' renkli veya belirgin biçimde renklendirilmiş "
+        "anlamına gelir. Rhododendron coloratum epiteti renk "
+        "kökünü doğrudan taşır. Bununla birlikte, bu bilimsel "
+        "adın kabul edilmiş bir taksona karşılık gelip gelmediği "
+        "güncel taksonomik kaynaklardan doğrulanmalıdır. Yalnızca "
+        "Latince açıdan uygun görünen bir ad bilimsel doğruluk "
+        "için yeterli değildir.",
     ),
     (
         "Piceus",
-        "Zift siyahı",
-        ["Kar beyazı", "Zift siyahı", "Leylak", "Gümüş"],
-        "Botanik renk sıfatı",
-        "Çok koyu siyah",
-        "'Piceus' zift gibi koyu veya siyah anlamına gelir.",
+        "Zift siyahı veya katran rengi",
+        ["Kar beyazı", "Zift siyahı veya katran rengi", "Leylak", "Gümüş"],
+        "Pinus nigra",
+        "Karaçam",
+        "'Piceus' zift veya katran gibi koyu renkleri ifade eder. "
+        "Pinus nigra'nın tür epiteti 'nigra', siyah veya çok koyu "
+        "anlamına gelir; 'piceus' ile aynı sözcük değildir. Karaçamın "
+        "koyu kabuğu ve koyu yeşil iğne yaprakları bu renk grubuyla "
+        "kısmen ilişkilendirilebilir, ancak zift siyahı anlamı için "
+        "doğrudan epitet eşleşmesi sayılmaz.",
     ),
     (
         "Dilutus",
-        "Açılmış veya seyrelmiş",
-        ["Çok koyu", "Açılmış veya seyrelmiş", "Parlak siyah", "Altın rengi"],
-        "Botanik renk sıfatı",
-        "Seyreltik tonlar",
-        "'Dilutus' seyrelmiş veya daha açık hale gelmiş anlamına gelir.",
+        "Seyreltik veya soluk renkli",
+        ["Çok koyu", "Seyreltik veya soluk renkli", "Parlak siyah", "Altın rengi"],
+        "Gentiana diluta",
+        "Soluk renkli kantaron",
+        "'Dilutus' seyreltilmiş, açılmış veya yoğunluğu azaltılmış "
+        "anlamına gelir. Gentiana diluta adı renk yoğunluğunun "
+        "azalmasını çağrıştıran epiteti doğrudan taşır. Ancak "
+        "bu adın geçerli bir tür adına karşılık gelip gelmediği "
+        "ve çiçek renginin gerçekten soluk olduğu doğrulanmadan "
+        "kesin botanik eşleştirme olarak kullanılmamalıdır.",
     ),
     (
         "Clarus",
-        "Açık veya parlak",
-        ["Açık veya parlak", "Siyah", "Koyu kahverengi", "Kırmızı"],
-        "Botanik renk sıfatı",
-        "Parlak görünüm",
-        "'Clarus' açık, parlak veya belirgin anlamına gelebilir.",
+        "Açık, berrak veya parlak",
+        ["Açık, berrak veya parlak", "Siyah", "Koyu kahverengi", "Kırmızı"],
+        "Narcissus poeticus",
+        "Şair nergisi",
+        "'Clarus' açık, berrak veya parlak anlamına gelir. Narcissus "
+        "poeticus'un beyaz taç yaprakları ve kırmızı kenarlı sarı "
+        "taç borusu belirgin renk karşıtlığı oluşturur. Bununla "
+        "birlikte, tür epiteti 'poeticus' olduğundan 'clarus' ile "
+        "aynı renk kökünü taşımaz; bu eşleştirme yalnızca görünür "
+        "renk niteliğine dayalıdır.",
     ),
     (
         "Saturatus",
-        "Doygun veya yoğun",
-        ["Soluk", "Doygun veya yoğun", "Renksiz", "Şeffaf"],
-        "Botanik renk sıfatı",
-        "Yoğun renkler",
-        "'Saturatus' doygun veya yoğun anlamına gelir.",
+        "Doygun veya yoğun renkli",
+        ["Soluk", "Doygun veya yoğun renkli", "Renksiz", "Şeffaf"],
+        "Tulipa gesneriana",
+        "Bahçe lalesi",
+        "'Saturatus' doygun veya yoğun renkli anlamına gelir. "
+        "Tulipa gesneriana'nın kültivarlarında kırmızı, mor, sarı "
+        "ve turuncu gibi doygun çiçek renkleri yaygındır. Ancak "
+        "tür ve kültivarlar arasında geniş renk çeşitliliği vardır; "
+        "bu nedenle açıklama tek bir renge değil, doygun renkli "
+        "kültivarların çiçek pigmentlerine dayanır.",
     ),
     (
         "Opacus",
-        "Mat veya donuk",
-        ["Parlak", "Mat veya donuk", "Gümüş", "Kızıl"],
-        "Botanik görünüm sıfatı",
-        "Mat yüzeyler",
-        "'Opacus' mat, donuk veya ışığı geçirmeyen anlamına gelebilir.",
+        "Mat, donuk veya ışık geçirmeyen",
+        ["Parlak", "Mat, donuk veya ışık geçirmeyen", "Gümüş", "Kızıl"],
+        "Stachys byzantina",
+        "Kuzu kulağı",
+        "'Opacus' mat, donuk veya ışık geçirmeyen anlamına gelir. "
+        "Stachys byzantina'nın yoğun beyazımsı tüylerle kaplı "
+        "yaprakları ışığı dağınık biçimde yansıtır ve kadifemsi, "
+        "mat bir görünüm oluşturur. Tür epiteti 'byzantina' "
+        "olduğundan bu örnek doğrudan ad kökü eşleşmesi değildir.",
     ),
     (
         "Micans",
-        "Parıldayan",
-        ["Kül grisi", "Parıldayan", "Soluk", "Siyah"],
-        "Botanik görünüm sıfatı",
-        "Işıltılı yüzeyler",
-        "'Micans' parıldayan veya ışıldayan anlamına gelir.",
+        "Parıldayan veya ışıltılı",
+        ["Kül grisi", "Parıldayan veya ışıltılı", "Soluk", "Siyah"],
+        "Tradescantia zebrina",
+        "Telgraf çiçeği",
+        "'Micans' parıldayan veya ışıldayan anlamına gelir. "
+        "Tradescantia zebrina'nın yapraklarında gümüşi, ışığı "
+        "yansıtan şeritler bulunur; bu şeritler yaprak yüzeyinin "
+        "optik özellikleri nedeniyle belirgin bir ışıltı oluşturur. "
+        "Ancak tür epiteti 'zebrina' olduğundan 'micans' ile "
+        "aynı sözcük kökünü taşımaz.",
     ),
+
+    # ============================================================
+    # 5. SUB- ÖNEKLİ VE BENZER ANLAMLAR
+    # ============================================================
     (
         "Subalbus",
         "Beyazımsı",
         ["Kırmızı", "Beyazımsı", "Siyah", "Mavi"],
-        "Botanik renk sıfatı",
-        "Beyaza çalan tonlar",
-        "'Sub-' öneki 'biraz' veya '-ımsı' anlamı katar.",
+        "Melilotus albus",
+        "Ak kokulu yonca",
+        "'Sub-' öneki yaklaşık olma veya bir niteliği daha düşük "
+        "derecede taşıma anlamı katabilir; 'subalbus' bu nedenle "
+        "beyazımsı olarak yorumlanır. Melilotus albus'un beyaz "
+        "çiçekleri belirgin biçimde beyazdır; ancak tür epiteti "
+        "'albus' doğrudan beyaz anlamına gelir ve 'subalbus' ile "
+        "aynı sözcük değildir. Bu nedenle renk anlamı yakın olsa "
+        "da tam epitet eşleşmesi değildir.",
     ),
     (
         "Subflavus",
         "Sarımsı",
         ["Gümüş", "Mor", "Sarımsı", "Koyu siyah"],
-        "Botanik renk sıfatı",
-        "Sarıya çalan tonlar",
-        "'Subflavus' sarımsı anlamına gelir.",
+        "Verbascum thapsus",
+        "Sığırkuyruğu",
+        "'Subflavus', sarıya çalan veya sarımsı anlamında "
+        "yorumlanabilir. Verbascum thapsus'un çiçekleri sarıdır, "
+        "yaprakları ise yoğun tüylenme nedeniyle grimsi görünür. "
+        "Bu nedenle bitki sarımsı anlamını yalnızca çiçekleri "
+        "üzerinden kısmen karşılar; tür epiteti 'thapsus' olduğundan "
+        "doğrudan renk kökü eşleşmesi değildir.",
     ),
     (
         "Subrubens",
         "Kırmızımsı",
         ["Kırmızımsı", "Mavimsi", "Yeşilimsi", "Beyazımsı"],
-        "Botanik renk sıfatı",
-        "Kırmızıya çalan tonlar",
-        "'Subrubens' kırmızımsı anlamında yorumlanabilir.",
+        "Silene rubella",
+        "Kırmızımsı nakıl",
+        "'Subrubens' kırmızımsı veya hafifçe kızaran anlamında "
+        "yorumlanabilir. Silene rubella adındaki 'rubella', "
+        "kırmızı anlamındaki 'ruber' sözcük ailesiyle ilişkilidir. "
+        "Bununla birlikte, bu türün çiçeklerinin renk tonu ve "
+        "taksonomik geçerliliği güvenilir kaynaklarla doğrulanmadan "
+        "kesin bir renk örneği olarak kullanılmamalıdır.",
     ),
     (
         "Subviridis",
         "Yeşilimsi",
         ["Kızıl", "Gümüş", "Yeşilimsi", "Siyah"],
-        "Botanik renk sıfatı",
-        "Yeşile çalan tonlar",
-        "'Subviridis' yeşilimsi anlamına gelir.",
+        "Amaranthus viridis",
+        "Yeşil amarant",
+        "'Subviridis' yeşilimsi veya tam doygun olmayan yeşil "
+        "anlamında yorumlanabilir. Amaranthus viridis'in yaprakları "
+        "yeşildir; ancak tür epiteti 'viridis' doğrudan yeşil "
+        "anlamına gelir ve 'subviridis' ile aynı sözcük değildir. "
+        "Yapraklardaki yeşil görünüm klorofil pigmentlerinden "
+        "kaynaklanır; bu örnek yaklaşık yeşil tonunu tek başına "
+        "kanıtlamaz.",
     ),
 ]
-
 
 # ============================================================
 # 4. SORU HAVUZUNU DOĞRULAMA
