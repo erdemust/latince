@@ -167,6 +167,72 @@ RAW_QUESTIONS = [
     # ============================================================
     # 1. TEMEL RENKLER
     # ============================================================
+     (
+        "Glaber",
+        "Tüysüz veya pürüzsüz",
+        ["Tüylü", "Tüysüz veya pürüzsüz", "Dikenli", "Benekli"],
+        "Acer glabrum",
+        "Pürüzsüz akçaağaç",
+        "'Glaber' Latince tüysüz veya pürüzsüz anlamına gelir. "
+        "Botanikte bitki yüzeyinde tüy bulunmamasını ifade edebilir. "
+        "Acer glabrum adındaki 'glabrum', sıfatın nötr biçimidir."
+    ),
+    (
+        "Hirsutus",
+        "Uzun veya sert tüylü",
+        ["Pürüzsüz", "Parlak", "Uzun veya sert tüylü", "Tüysüz"],
+        "Rosa hirsuta",
+        "Tüylü gül",
+        "'Hirsutus' uzun veya sert tüylerle kaplı anlamına gelir. "
+        "Botanikte yaprak ve gövde yüzeyindeki belirgin tüyleri "
+        "tanımlamak için kullanılan bir terimdir."
+    ),
+    (
+        "Glabrescens",
+        "Zamanla tüysüzleşen",
+        ["Zamanla tüysüzleşen", "Sürekli tüylü", "Dikenlenen", "Renk değiştiren"],
+        "Bitkilerde glabrescent yüzey",
+        "Zamanla tüysüzleşen yüzey",
+        "'Glabrescens', bitki yüzeyinin gelişim sırasında "
+        "tüylerini kaybederek tüysüzleşmesini ifade eder. "
+        "Bu özellik yaprak ve gövde gibi organlarda görülebilir."
+    ),
+    (
+        "Tomentosus",
+        "Sık ve keçemsi tüylü",
+        ["Parlak", "Sık ve keçemsi tüylü", "Tüysüz", "Dikenli"],
+        "Verbascum tomentosum",
+        "Keçemsi tüylü sığırkuyruğu",
+        "'Tomentosus' sık, yumuşak ve keçemsi tüylerle kaplı "
+        "anlamına gelir. Bu tüyler bitki yüzeyinin dokusunu "
+        "ve görünümünü değiştirebilir. Verilen tür adı ayrıca "
+        "güncel taksonomik kaynaklardan doğrulanmalıdır."
+    ),
+    (
+        "Spinosus",
+        "Dikenli",
+        ["Düz yüzeyli", "Dikenli", "Tüysüz", "Yumuşak"],
+        "Ruscus aculeatus",
+        "Tavşanmemesi",
+        "'Spinosus' dikenli anlamına gelir. Botanikte diken "
+        "taşıyan bitki organlarını veya dikenli görünümü "
+        "tanımlamak için kullanılabilir. Ruscus aculeatus "
+        "sert ve sivri uçlu yapılarıyla tanınır."
+    ),
+    (
+        "Dentatus",
+        "Dişli kenarlı",
+        ["Düz kenarlı", "Dişli kenarlı", "Yuvarlak", "Tüysüz"],
+        "Urtica dioica",
+        "Büyük ısırgan",
+        "'Dentatus' dişli anlamına gelir. Botanikte yaprak "
+        "kenarlarında diş benzeri çıkıntılar bulunmasını "
+        "ifade eder. Urtica dioica yaprakları belirgin "
+        "dişli kenarlara sahiptir."
+    ),
+    
+    
+    
     (
         "Albus",
         "Beyaz",
@@ -1091,10 +1157,10 @@ def render_register():
         )
 
         maximum = len(QUESTIONS)
-        count_options = sorted(
-            set(n for n in [5, 10, 15, 20, 30, 50, maximum] if 1 <= n <= maximum)
-        )
-        default_count = min(10, maximum)
+        count_options = sorted(set(n for n in [5, 10, 15, 20, 30, 40, 50, 60, maximum] if 1 <= n <= maximum)
+)
+        default_count = min(60, maximum)
+
 
         selected_count = st.selectbox(
             "Test uzunluğu",
